@@ -1,0 +1,304 @@
+/* ==========================================================================
+   Cockpit — painel lateral do Mapa. Clicar num dispositivo ou numa área/corredor
+   dentro do mapa abre, à esquerda do próprio widget, um painel com os dados do que
+   foi selecionado. O Mapa (map.js) só avisa qual é a seleção; tudo que é conteúdo
+   e botão do painel mora aqui, no mesmo espírito de app.js.
+
+   Só mostra o que existe nos dados: status e alertas são os simulados pelo LiveState,
+   a região do dispositivo é a calculada pela posição (regioes.js). Nada de dado de
+   negócio inventado.
+   ========================================================================== */
+
+const PainelSelecao = (() => {
+  let abaAtiva = Versoes.ehV12 ? "comandos" : "geral"; // aba do painel de controlador; mantida ao passar de um controlador para outro (v1.2 abre nos comandos, que é o foco)
+
+  const painelEl = () => document.querySelector(".map-selecao");
+
+  const fmtDist = (m) => (m >= 1000 ? `${(m / 1000).toFixed(1).replace(".", ",")} km` : `${Math.round(m)} m`);
+  const fmtArea = (m2) => (m2 >= 1e6 ? `${(m2 / 1e6).toFixed(2).replace(".", ",")} km²` : `${Math.round(m2).toLocaleString("pt-BR")} m²`);
+
+  const regiaoPor = (tipo, id) => (tipo === "subarea" ? SUBAREAS : CORREDORES).find((r) => r.id === id) || null;
+  const equipamentosDaRegiao = (tipo, id) => {
+    const campo = tipo === "subarea" ? "subareaId" : "corredorId";
+    return LiveState.getEquipamentos().filter((e) => e[campo] === id);
+  };
+
+  /* ---------- conteúdo ---------- */
+
+  function dadosEquipamentoMarkup(eq) {
+    const alertas = LiveState.alertasDoEquipamento(eq.id);
+    const sub = eq.subareaId ? nomeSubarea(eq.subareaId) : null;
+    const cor = eq.corredorId ? nomeCorredor(eq.corredorId) : null;
+    const comEstado = Versoes.tem("mapa.estado"); // v1/v1.2: só cadastro, sem status nem alertas
+    return `
+      <div class="sel-bloco">
+        ${comEstado ? `<div class="sel-linha"><span>Status</span><span class="status-tag" data-status="${eq.online ? "online" : "offline"}">${eq.online ? "Online" : "Offline"}</span></div>` : ""}
+        <div class="sel-linha"><span>Categoria</span><strong>${categoriaLabel(eq.tipo)}</strong></div>
+        <div class="sel-linha"><span>Subárea</span>${sub ? `<strong>${sub}</strong>` : "<em>Fora de subárea</em>"}</div>
+        <div class="sel-linha"><span>Corredor</span>${cor ? `<strong>${cor}</strong>` : "<em>Fora de corredor</em>"}</div>
+        <div class="sel-linha"><span>Posição</span><strong class="sel-mono">${eq.lat.toFixed(5)}, ${eq.lng.toFixed(5)}</strong></div>
+      </div>
+      ${comEstado ? `<div class="sel-bloco">
+        <h5>Alertas ativos <span class="sel-contagem">${alertas.length}</span></h5>
+        ${
+          alertas.length
+            ? alertas
+                .map(
+                  (a) => `
+          <div class="sel-alerta">
+            <div><span class="severidade-tag" data-sev="${a.severidade}">${a.severidade}</span><span class="id-mono">${a.dataHora}</span></div>
+            <p>${a.descricao}</p>
+          </div>`
+                )
+                .join("")
+            : '<div class="sel-vazio">Nenhum alerta ativo.</div>'
+        }
+      </div>` : ""}`;
+  }
+
+  // Mesmo visual da aba Geral do controlador: bloco de campos no topo + seções recolhíveis.
+  // Alertas ativos dos equipamentos que estão dentro da região.
+  function alertasDaRegiao(tipo, regId) {
+    const ids = new Set(equipamentosDaRegiao(tipo, regId).map((e) => e.id));
+    return LiveState.getAlertas().filter((a) => ids.has(a.equipamentoId));
+  }
+
+  // Aba Alertas da região: resumo por severidade + a lista dos alertas (clicar abre o equipamento).
+  function alertasRegiaoMarkup(tipo, reg) {
+    const alertas = alertasDaRegiao(tipo, reg.id);
+    if (!alertas.length) return '<div class="sel-bloco"><div class="sel-vazio">Nenhum alerta ativo nesta região.</div></div>';
+    const { campo } = PainelControlador;
+    const severidades = SEVERIDADES.map((sev) => [sev, alertas.filter((a) => a.severidade === sev).length]);
+    const ordenados = [...alertas].sort((a, b) => SEVERIDADES.indexOf(a.severidade) - SEVERIDADES.indexOf(b.severidade));
+    return `
+      <div class="sel-bloco"><div class="sel-campos">${severidades.map(([sev, n]) => campo(sev, `<strong${n && (sev === "Crítico" || sev === "Alto") ? ' class="sel-valor-alerta"' : ""}>${n}</strong>`)).join("")}</div></div>
+      <div class="sel-bloco">
+        ${ordenados
+          .map((a) => {
+            const eq = LiveState.equipamentoPorId(a.equipamentoId);
+            return `
+          <button type="button" class="sel-item" data-sel-acao="abrir" data-alvo="${a.equipamentoId}">
+            <span><strong>${eq ? eq.nome : a.equipamentoId}</strong><span class="id-mono">${a.descricao} · ${a.dataHora}</span></span>
+            <span class="severidade-tag" data-sev="${a.severidade}">${a.severidade}</span>
+          </button>`;
+          })
+          .join("")}
+      </div>`;
+  }
+
+  function dadosRegiaoMarkup(tipo, reg) {
+    const { campo, secaoMarkup } = PainelControlador;
+    const forte = (v, alerta) => `<strong${alerta ? ' class="sel-valor-alerta"' : ""}>${v}</strong>`;
+    const eqs = equipamentosDaRegiao(tipo, reg.id);
+    const offline = eqs.filter((e) => !e.online).length;
+    const idsRegiao = new Set(eqs.map((e) => e.id));
+    const alertas = LiveState.getAlertas().filter((a) => idsRegiao.has(a.equipamentoId));
+    const porCategoria = CATEGORIAS_EQUIPAMENTO.map((c) => {
+      const lista = eqs.filter((e) => e.tipo === c.id);
+      return { c, total: lista.length, off: lista.filter((e) => !e.online).length };
+    }).filter((x) => x.total > 0);
+    const comAlerta = (e) => LiveState.alertasDoEquipamento(e.id).length;
+    const atencao = eqs
+      .filter((e) => !e.online || comAlerta(e) > 0)
+      .sort((a, b) => Number(a.online) - Number(b.online) || comAlerta(b) - comAlerta(a));
+
+    const topo = `<div class="sel-campos">
+      ${campo("Tipo", forte(tipo === "corredor" ? "Corredor" : "Subárea"))}
+      ${
+        tipo === "corredor"
+          ? campo("Extensão", forte(fmtDist(comprimentoPolilinhaM(reg.linha)) + (reg.raioM ? ` · alcance ${reg.raioM} m` : "")))
+          : campo("Área", forte(fmtArea(areaPoligonoM2(reg.poligono))))
+      }
+      ${campo("Dispositivos", forte(eqs.length))}
+      ${campo("Alertas ativos", forte(alertas.length, alertas.length > 0))}
+    </div>`;
+
+    const status = `<div class="sel-campos">
+      ${campo("Online", forte(eqs.length - offline))}
+      ${campo("Offline", forte(offline, offline > 0))}
+    </div>
+    <div class="sel-tipos">
+      ${porCategoria
+        .map(({ c, total, off }) => {
+          const dica = `${c.label}: ${total}${off ? ` (${off} offline)` : ""}`;
+          return `<span class="sel-tipo${off ? " tem-offline" : ""}" title="${dica}" aria-label="${dica}">
+            <span class="sel-tipo-icone">${ICONES_CATEGORIA[c.id] || ""}</span><strong>${total}</strong>${off ? `<em class="sel-valor-alerta">${off} off</em>` : ""}
+          </span>`;
+        })
+        .join("")}
+    </div>`;
+
+    const atencaoSecao = atencao.length
+      ? atencao
+          .slice(0, 6)
+          .map(
+            (e) => `
+          <button type="button" class="sel-item" data-sel-acao="abrir" data-alvo="${e.id}">
+            <span><strong>${e.nome}</strong><span class="id-mono">${e.id}</span></span>
+            <span class="status-tag" data-status="${e.online ? "online" : "offline"}">${e.online ? "Online" : "Offline"}</span>
+          </button>`
+          )
+          .join("") + (atencao.length > 6 ? `<div class="sel-vazio">e mais ${atencao.length - 6}</div>` : "")
+      : '<div class="sel-vazio">Nenhum dispositivo com problema.</div>';
+
+    return `
+      <div class="sel-bloco">${topo}</div>
+      ${secaoMarkup("regiao-status", "Status dos dispositivos", eqs.length ? status : '<div class="sel-vazio">Nenhum dispositivo dentro desta região.</div>')}
+      ${secaoMarkup("regiao-atencao", `Precisam de atenção${atencao.length ? ` (${atencao.length})` : ""}`, atencaoSecao)}`;
+  }
+
+  function descricaoDaSelecao(sel) {
+    if (sel.tipo === "equipamento") {
+      const eq = LiveState.equipamentoPorId(sel.id);
+      if (!eq) return null;
+      // Todo dispositivo tem abas (a Geral sempre); o conteúdo do controlador é mais rico que o dos demais.
+      const ehControlador = eq.tipo === "semaforo";
+      return {
+        titulo: eq.id,
+        sub: eq.nome,
+        abas: PainelControlador.abas(eq),
+        dados: (aba) => {
+          const atual = LiveState.equipamentoPorId(sel.id);
+          return ehControlador ? PainelControlador.dados(atual, aba) : dadosEquipamentoMarkup(atual);
+        },
+        botoes: "",
+        rodape: () => PainelControlador.rodapeMarkup(LiveState.equipamentoPorId(sel.id)),
+      };
+    }
+    const reg = regiaoPor(sel.tipo, sel.id);
+    if (!reg) return null;
+    const n = alertasDaRegiao(sel.tipo, sel.id).length;
+    return {
+      titulo: reg.nome,
+      sub: `${reg.id} · ${sel.tipo === "subarea" ? "Subárea" : "Corredor"}`,
+      abas: [
+        { id: "geral", label: "Geral" },
+        { id: "alertas", label: `Alertas${n ? ` <span class="sel-aba-n">${n}</span>` : ""}` },
+      ],
+      dados: (aba) => (aba === "alertas" ? alertasRegiaoMarkup(sel.tipo, regiaoPor(sel.tipo, sel.id)) : dadosRegiaoMarkup(sel.tipo, regiaoPor(sel.tipo, sel.id))),
+      botoes: "", // enquadrar e filtrar já acontecem ao clicar na lista de Regiões
+    };
+  }
+
+  /* ---------- render ---------- */
+
+  function renderizar(sel) {
+    const el = painelEl();
+    if (!el) return;
+    const desc = sel && descricaoDaSelecao(sel);
+    marcarLinhaSelecionada(desc ? sel : null);
+    if (!desc) {
+      el.hidden = true;
+      el.classList.remove("is-open");
+      el.innerHTML = "";
+      return;
+    }
+    const estavaFechado = el.hidden;
+    const abas = desc.abas;
+    if (abas) {
+      if (!abas.some((a) => a.id === abaAtiva)) abaAtiva = abas[0].id;
+      if (abaAtiva === "grupos") PainelControlador.carregarGrupos(sel.id);
+    } else {
+      abaAtiva = "geral";
+    }
+    const acoes = desc.botoes;
+    const rodape = desc.rodape ? desc.rodape() : ""; // vazio em v1/v1.2: sem estado, sem "última comunicação"
+    el.innerHTML = `
+      <header class="sel-head">
+        <div class="sel-titulo"><strong>${desc.titulo}</strong><span>${desc.sub}</span></div>
+        <button type="button" class="widget-icon-btn" data-sel-acao="fechar" title="Fechar (Esc)">${ICONS.x}</button>
+      </header>
+      ${
+        abas
+          ? `<nav class="sel-abas" role="tablist">${abas
+              .map(
+                (a) =>
+                  `<button type="button" role="tab" class="sel-aba${a.id === abaAtiva ? " is-ativa" : ""}" aria-selected="${a.id === abaAtiva}" data-sel-acao="aba" data-aba="${a.id}">${a.label}</button>`
+              )
+              .join("")}</nav>`
+          : ""
+      }
+      <div class="sel-corpo">
+        <div class="sel-dados">${desc.dados(abaAtiva)}</div>
+        ${acoes ? `<div class="sel-acoes">${acoes}</div>` : ""}
+      </div>
+      ${rodape ? `<footer class="sel-footer">${rodape}</footer>` : ""}`;
+    el.hidden = false;
+    if (estavaFechado) {
+      el.classList.remove("is-open");
+      void el.offsetWidth; // reinicia a animação de entrada
+      el.classList.add("is-open");
+    }
+  }
+
+  // Marca nas listas dos widgets a linha do que está aberto no painel, sem refazer a lista
+  // (refazer voltaria a rolagem ao topo a cada clique).
+  function marcarLinhaSelecionada(sel) {
+    document.querySelectorAll('tr[data-action="lista-row"]').forEach((tr) => {
+      tr.classList.toggle("is-selecionada", !!sel && tr.dataset.tipo === sel.tipo && tr.dataset.alvo === sel.id);
+    });
+  }
+
+  // A cada tick do tempo real só os dados são refeitos, sem mexer nos botões nem na posição da rolagem.
+  function atualizarDados({ forcar = false } = {}) {
+    const sel = CockpitMap.getSelecao();
+    const el = painelEl();
+    const dadosEl = el && el.querySelector(".sel-dados");
+    const desc = sel && descricaoDaSelecao(sel);
+    if (!dadosEl || !desc) return;
+    const rodape = el.querySelector(".sel-footer");
+    if (rodape && desc.rodape) rodape.innerHTML = desc.rodape();
+    // a contagem de alertas no rótulo da aba acompanha o tempo real
+    if (desc.abas) {
+      desc.abas.forEach((a) => {
+        const botao = el.querySelector(`.sel-aba[data-aba="${a.id}"]`);
+        if (botao) botao.innerHTML = a.label;
+      });
+    }
+    // Comandos e Grupos não mudam sozinhos com o tempo real; refazê-los a cada tick desarmaria
+    // o botão "Confirmar?" do Reset. Quem os altera pede o redesenho (redesenharDados).
+    if (!forcar && (abaAtiva === "comandos" || abaAtiva === "grupos")) return;
+    // Refazer o HTML fecharia um select aberto; espera ele sair de foco.
+    if (!forcar && document.activeElement?.tagName === "SELECT" && dadosEl.contains(document.activeElement)) return;
+    dadosEl.innerHTML = desc.dados(abaAtiva);
+  }
+
+  /* ---------- ligação com o mapa e os cliques do painel ---------- */
+
+  CockpitMap.definirAoSelecionar(renderizar);
+  LiveState.subscribe(() => {
+    if (CockpitMap.getSelecao()) atualizarDados();
+  });
+
+  document.addEventListener("click", (e) => {
+    const alvo = e.target.closest("[data-sel-acao]");
+    if (!alvo) return;
+    const sel = CockpitMap.getSelecao();
+    switch (alvo.dataset.selAcao) {
+      case "fechar":
+        CockpitMap.limparSelecao();
+        break;
+      case "aba":
+        if (sel) {
+          abaAtiva = alvo.dataset.aba;
+          renderizar(sel);
+        }
+        break;
+      case "abrir":
+        CockpitMap.selecionarEquipamento(alvo.dataset.alvo, { centralizar: true });
+        break;
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !CockpitMap.getSelecao()) return;
+    if (e.target.matches?.("input, textarea") || document.querySelector(".modal-overlay.is-open")) return;
+    CockpitMap.limparSelecao();
+  });
+
+  return {
+    redesenharDados() {
+      if (CockpitMap.getSelecao()) atualizarDados({ forcar: true });
+    },
+  };
+})();

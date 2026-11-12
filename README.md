@@ -1,0 +1,77 @@
+# Cockpit — protótipo (Antares / dataprom)
+
+Protótipo navegável do **Épico #125012 — Cockpit Operacional Semafórico**: uma tela em
+grade onde o usuário adiciona, move, redimensiona, configura e remove widgets (Mapa,
+Dispositivos, Alertas, Subáreas e Corredores) pra montar seu próprio painel operacional.
+Mesma identidade visual e mesma convenção de projeto do `croqui-prototipo` — site estático,
+sem build, sem backend. Layout e configuração de cada card ficam no `localStorage` do
+navegador (simula "atrelado ao perfil do usuário").
+
+## Cobertura das histórias
+
+| História | O que cobre no protótipo |
+|---|---|
+| #125012 (Épico) | Grid com adicionar/mover/redimensionar/remover, múltiplas instâncias (exceto Mapa). O 1º acesso abre a "Tela inicial" (lista de regiões + mapa); a tela vazia com o passo a passo aparece depois de limpar o painel |
+| #125167 — Widget de Mapa | Instância única, filtros Subáreas/Corredores/Equipamentos (dropdown + busca + Todas/Limpar), busca livre com destaque+zoom, status ao vivo |
+| #125168 — Widget de Dispositivos | Card Totais / Lista Detalhada, config (nome/cor/filtros), integração com o Mapa |
+| #125169 — Widget de Alertas | Totais por severidade / Lista Detalhada com busca+paginação, "Ver tudo" (fora de escopo aqui), integração com o Mapa |
+| #128628 — Widget de Regiões | Totais Subáreas+Corredores / Lista em abas, integração com o Mapa |
+
+"Tempo real" é simulado: a cada ~6s um equipamento aleatório troca de status (e abre/fecha
+um alerta de comunicação), refletindo nos widgets já abertos sem ação do operador. O número de
+equipamentos offline fica em torno de 3%, para a simulação não degradar com ~1000 semáforos.
+
+## Dados do Supabase
+
+Os semáforos vêm da tabela `controladores` do mesmo Supabase do `croqui-prototipo` (id, via e
+posição; status e alertas seguem simulados). Sem resposta do banco, o Cockpit mostra os semáforos
+de exemplo de `data.js` e avisa. Câmeras, radares, nobreaks e pluviômetros continuam de exemplo.
+
+Não há subáreas nem corredores de exemplo: eles existem só quando cadastrados. O cadastro fica
+escondido: abrir o Cockpit com `?admin` (uma vez; `?admin=0` desliga) mostra o dock **Admin** para
+desenhar corredor (linha no mapa + alcance em metros) e área (polígono), renomear e excluir. As
+regiões ficam nas tabelas `cockpit_corredores` e `cockpit_areas` (`supabase/regioes.sql`, rodar
+uma vez no SQL Editor). Pertencer a uma área = estar dentro do polígono; a um corredor = estar a
+até o alcance da linha (o mais próximo vence).
+
+## Rodar local
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\_serve.ps1
+# abre http://localhost:8746/
+```
+
+Ou pelo [Painel de Protótipos](../prototipos-painel) (`node server.mjs`, porta 8700), que
+descobre esta pasta sozinho por ter `_serve.ps1`.
+
+Local não pede senha. No deploy da Vercel o site inteiro fica atrás de HTTP Basic Auth
+(`middleware.js`), com usuário e senha definidos nas Environment Variables `SITE_USUARIO` /
+`SITE_SENHA` do projeto na Vercel (não ficam no código). Sem as variáveis, o site fica fechado.
+
+## Fora de escopo (herdado do Épico)
+
+Compartilhamento de tela entre usuários, mais de uma tela por usuário, widgets de série
+temporal, exportação PDF/PNG, tela detalhada de Alertas (o botão "Ver tudo" só mostra um
+toast) — mesmos recortes do `00 - epic - Cockpit.md`.
+
+## Trabalhando em equipe (mais de uma pessoa no repo)
+
+**Fluxo:** ninguém faz commit direto no `main` — a Vercel publica o `main`. Cada tarefa vai
+numa branch curta e entra por Pull Request:
+
+```bash
+git checkout main && git pull           # sempre partir do main atualizado
+git checkout -b ux/nome-curto-da-tarefa # prefixo por pessoa/área: ux/, produto/
+# ...altera, testa local...
+git add -A && git commit -m "O que mudou, em uma linha"
+git push -u origin ux/nome-curto-da-tarefa
+# abre o Pull Request no GitHub -> a Vercel gera um link de prévia -> revisão -> merge
+```
+
+**Pra não dar conflito:**
+- Branch de 1–2 dias, não de semanas. Antes de abrir o PR: `git pull origin main` na branch.
+- Combinar quem mexe em quê nos arquivos grandes: `assets/painel-controlador.js`, `assets/app.js`, `assets/style.css`.
+- Quebra de linha já está padronizada pelo `.gitattributes` (LF) — não mudar `core.autocrlf`
+  pra "consertar" aviso de CRLF.
+- O Supabase é compartilhado entre as máquinas: mudança de tabela/migração, uma pessoa só roda
+  e avisa antes.
