@@ -132,6 +132,20 @@ function situacaoIndicadores() {
    SIMULAÇÃO: o texto é montado por regras a partir dos mesmos números dos indicadores e da lista de Prioridades.
    Não há modelo de IA por trás. HIPÓTESE NÃO VALIDADA: se o produto teria uma análise assim, quem a escreve
    (regras ou IA), quais indicadores entram no conjunto e como se decide o que "importa agora". */
+// Ícone pequeno de cada indicador (ao lado do rótulo) e de cada capítulo (ao lado do nome dele no texto).
+const sitSvg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const SIT_ICONES = {
+  comunicando: sitSvg('<rect x="8" y="2" width="8" height="20" rx="3"/><circle cx="12" cy="7" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="17" r="1.3"/>'),
+  graves: sitSvg('<path d="M12 3 22 20H2L12 3Z"/><path d="M12 10v4.5M12 17.4h.01"/>'),
+  foraDoNormal: sitSvg('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>'),
+  lentidao: sitSvg('<path d="M3 17h18M5 17l1.6-5.6A2 2 0 0 1 8.5 10h7a2 2 0 0 1 1.9 1.4L19 17"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/>'),
+  chuva: sitSvg('<path d="M8 15a5 5 0 0 1-1-9.9A6 6 0 0 1 18 7a4 4 0 0 1-1 8H8Z"/><path d="M9 18.5v1.5M12 18.5V22M15 18.5v1.5"/>'),
+  acidentes: sitSvg('<path d="M9.5 3h5L19 18H5L9.5 3Z"/><path d="M3 21h18M7.4 11h9.2"/>'),
+  offlineOutros: sitSvg('<path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 4.3-2.4M19 12.9a10 10 0 0 0-3.2-2M12 20h.01"/>'),
+  panorama: sitSvg('<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'),
+  normal: sitSvg('<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.5"/>'),
+};
+
 const SIT_VISIVEIS = 5; // quantos indicadores cabem na faixa
 const SIT_CAPITULO_S = 8; // tempo de cada capítulo na tela
 const SIT_ICONE_ANALISE = '<span class="sit-ia-icone" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';
@@ -152,7 +166,7 @@ function situacaoCapitulos(inds, pior) {
   const caps = [];
 
   caps.push({
-    rotulo: "Panorama",
+    rotulo: "Panorama", icone: "panorama",
     texto: fora.length
       ? `<b>${fora.length} de ${inds.length}</b> indicadores em destaque estão fora do normal: ${fora.map((x) => SIT_NOMES[x.id]).join(", ").replace(/, ([^,]*)$/, " e $1")}.`
       : "Todos os indicadores em destaque estão dentro do esperado.",
@@ -161,7 +175,7 @@ function situacaoCapitulos(inds, pior) {
 
   const topo = prioridadesLista().find((p) => p.tipo === "equipamento");
   if (topo) caps.push({
-    rotulo: "Mais urgente",
+    rotulo: "Mais urgente", icone: "graves",
     texto: `<b>${topo.titulo}</b>: ${topo.motivo.split(" · ")[0].toLowerCase()}${topo.tags.some((t) => t.t === "via") ? ", numa via que já está lenta" : ""}. É o primeiro da lista de prioridades.`,
     foco: [topo.tom === "offline" ? (topo.fonte === "Controladores" ? "comunicando" : "offlineOutros") : "graves"].filter(ind),
     acao: topo,
@@ -173,23 +187,23 @@ function situacaoCapitulos(inds, pior) {
     const partes = [];
     if (transito.some((x) => x.id === "lentidao")) partes.push(`o trânsito está <b>${ind("lentidao").pe.replace("+", "").replace(" sobre a média de 90 dias", "")} acima da média</b>, puxado pela ${via.via} (+${via.atraso} min)`);
     if (transito.some((x) => x.id === "acidentes")) partes.push(`o Waze informa <b>${ind("acidentes").valor} acidentes</b> na área`);
-    caps.push({ rotulo: "Trânsito", texto: maiuscula(partes.join(" e ")) + ".", foco: transito.map((x) => x.id) });
+    caps.push({ rotulo: "Trânsito", icone: "lentidao", texto: maiuscula(partes.join(" e ")) + ".", foco: transito.map((x) => x.id) });
   }
 
   if (foraDe(["chuva"]).length) caps.push({
-    rotulo: "Chuva",
+    rotulo: "Chuva", icone: "chuva",
     texto: `Chove em <b>nível de ${PLUVIO_DEMO.nivel.toLowerCase()}</b> na estação ${PLUVIO_DEMO.estacao}: ${sitNum(PLUVIO_DEMO.acumulado24h, 1)} mm em 24 h e ${sitNum(PLUVIO_DEMO.intensidade, 1)} mm/h agora.`,
     foco: ["chuva"],
   });
 
   const equip = foraDe(["comunicando", "foraDoNormal", "offlineOutros"]);
   if (equip.length) caps.push({
-    rotulo: "Equipamentos",
+    rotulo: "Equipamentos", icone: "comunicando",
     texto: `${maiuscula(equip.map((x) => `<b>${x.motivo}</b>`).join(" e "))}${ind("comunicando") && ind("comunicando").estado === "ok" ? `. A rede semafórica segue estável, com ${ind("comunicando").valor}% online` : ""}.`,
     foco: equip.map((x) => x.id),
   });
   else if (ind("comunicando")) caps.push({
-    rotulo: "O que segue normal",
+    rotulo: "O que segue normal", icone: "normal",
     texto: `A rede semafórica segue estável: <b>${ind("comunicando").valor}%</b> dos semáforos online.`,
     foco: ["comunicando"],
   });
@@ -228,12 +242,12 @@ function situacaoMarkup(inst) {
           ${acao}
         </div>
         <div class="sit-titulo-linha"><b class="sit-titulo">${SIT_ESTADOS[pior].titulo}</b><span class="sit-selo"><i></i>${SIT_ESTADOS[pior].rotulo}</span></div>
-        <p class="sit-frase"><em>${cap.rotulo}</em>${virou ? sitPalavras(cap.texto) : cap.texto}</p>
+        <p class="sit-frase"><em>${SIT_ICONES[cap.icone] || ""}${cap.rotulo}</em>${virou ? sitPalavras(cap.texto) : cap.texto}</p>
       </div>
       <div class="sit-kpis">
         ${inds.map((i) => `
         <div class="sit-kpi ${cap.foco.includes(i.id) ? "is-foco" : "is-fundo"}" data-estado="${i.estado}" data-fut="sit-kpi" data-ind="${i.id}" title="${SIT_ESTADOS[i.estado].rotulo}${i.ilustrativo ? " · dado ilustrativo" : ""}">
-          <span class="sit-kpi-rotulo"><i></i>${i.rotulo}</span>
+          <span class="sit-kpi-rotulo">${SIT_ICONES[i.id] || "<i></i>"}${i.rotulo}</span>
           <strong>${i.valor}${i.unidade ? `<small>${i.unidade}</small>` : ""}</strong>
           ${i.medida === null ? `<span class="sit-kpi-barra is-vazia"></span>` : `<span class="sit-kpi-barra"><i style="width:${i.medida.toFixed(1)}%"></i>${i.marca ? `<b style="left:${i.marca.toFixed(1)}%" title="Média de 90 dias"></b>` : ""}</span>`}
           <span class="sit-kpi-pe">${i.pe}</span>

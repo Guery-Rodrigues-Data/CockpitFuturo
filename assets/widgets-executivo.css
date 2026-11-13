@@ -322,3 +322,9 @@ html[data-tema="escuro"] { --ex-marca-fundo: #261413; }
 .sit-kpi.is-foco { background: none; }
 .sit.is-virou .sit-kpi.is-foco { animation: none; }
 .sit[data-estado="atencao"], .sit [data-estado="atencao"] { --est: var(--red); }
+
+/* ícones pequenos: um por indicador (no lugar do quadradinho, na cor do estado) e um no nome do capítulo */
+.sit-kpi-rotulo svg { flex: none; width: 15px; height: 15px; color: var(--est); }
+.sit-frase em { display: inline-flex; align-items: center; gap: 5px; vertical-align: baseline; }
+.sit-frase em svg { width: 13px; height: 13px; position: relative; top: 1px; }
+html[data-tela="tv"] .sit-kpi-rotulo svg { width: 17px; height: 17px; }
