@@ -91,8 +91,8 @@ function lentidaoMarkup(inst) {
   const dif = hojeAgora - mediaAgora;
   const sinal = dif > 0.05 ? "acima" : dif < -0.05 ? "abaixo" : "igual";
   return `
-    <div class="lt" data-id="${inst.id}" data-via="${via}">
-      ${lentidaoListaMarkup(inst, top, ui.atual, nHoje)}
+    <div class="lt${lentidaoComLista(inst) ? "" : " sem-lista"}" data-id="${inst.id}" data-via="${via}">
+      ${lentidaoComLista(inst) ? lentidaoListaMarkup(inst, top, ui.atual, nHoje) : ""}
       <div class="lt-principal">
       <div class="lt-topo">
         <span class="lt-rank">#${ui.atual + 1}</span>
@@ -131,6 +131,15 @@ function lentidaoMarkup(inst) {
       <div class="lt-nota">Extensão de lentidão (km) · Histórico ilustrativo</div>
       </div>
     </div>`;
+}
+
+// Interruptor "Lista" do cabeçalho do card: ligado = lista do top 10 + gráfico; desligado = só o gráfico.
+// Fica salvo na instância (config.lista); card salvo antes de o interruptor existir vale ligado.
+const lentidaoComLista = (inst) => inst.config.lista !== false;
+function lentidaoSwitchMarkup(inst) {
+  return `<button type="button" class="lt-switch" data-fut="lent-lista" data-id="${inst.id}" role="switch" aria-checked="${lentidaoComLista(inst)}" title="Mostrar ou esconder a lista das vias">
+      <span class="lt-switch-trilho"><i></i></span>Lista
+    </button>`;
 }
 
 // lista do top 10 (card largo): posição, via, barrinha do km de agora e o km na cor de acima/abaixo da média
@@ -208,4 +217,12 @@ document.addEventListener("click", (ev) => {
   if (el.dataset.fut === "lent-ant") lentidaoIr(id, ui.atual - 1);
   else if (el.dataset.fut === "lent-prox") lentidaoIr(id, ui.atual + 1);
   else if (el.dataset.fut === "lent-ir") lentidaoIr(id, Number(el.dataset.i));
+  else if (el.dataset.fut === "lent-lista") {
+    const inst = instances.find((i) => i.id === id);
+    if (!inst) return;
+    inst.config.lista = !lentidaoComLista(inst);
+    saveLayout();
+    el.setAttribute("aria-checked", String(inst.config.lista));
+    renderWidgetBody(id);
+  }
 }, true);

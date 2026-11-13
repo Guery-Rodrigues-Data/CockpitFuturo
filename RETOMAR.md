@@ -48,6 +48,10 @@ da cidade nem cruzava as fontes. Entraram dois widgets e duas telas prontas.
   protótipo, comentado no fim de `widgets-executivo.css`).
 - Conferido por captura de tela (Chrome headless) em 1920x1080 e 1366x768; a tela "Meu cockpit" não mudou.
 
+- **Lentidão: interruptor "Lista"** no cabeçalho do card (13/11): ligado mostra a lista do top 10 e o gráfico,
+  desligado só o gráfico. Fica salvo por card (`config.lista`). Em card estreito a lista vai para baixo do gráfico
+  (antes sumia). Na Visão executiva o card nasce com a lista desligada.
+
 Pendências se virar história (nada disso foi definido pelo negócio, está marcado HIPÓTESE NÃO VALIDADA no código):
 cortes de cada indicador (`SIT_CORTES`), regra "a cidade vale o pior indicador", pesos da ordem de prioridade
 (`PRI_PESOS`), e o que seria "disponibilidade". Ficou de fora o tempo de resposta (abertos x resolvidos, idade do
@@ -67,6 +71,5 @@ Os ícones e medidas do Figma foram lidos pelo navegador logado (API `figma` da 
 ## Para amanhã
 
 - Terminar o que faltar da apresentação (Guery decide por onde seguir).
-- Lentidão em card estreito: lista some (alternativa: ir para baixo do gráfico, como nas Câmeras).
 - Se a configuração dos cards fizer falta, mostrar o botão só no hover.
 - Atenção: a cópia usa o **mesmo Supabase** do original (cadastro de regiões no `?admin` afeta os dois).

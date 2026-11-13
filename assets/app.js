@@ -597,7 +597,7 @@ const PRESETS = [
       { type: "situacao", x: 0, y: 0, w: 12, h: 2 },
       { type: "mapa", x: 0, y: 2, w: 5, h: 8, config: { filtros: { camadas: { subareas: true, corredores: true, controladores: true } } } },
       { type: "prioridades", x: 5, y: 2, w: 3, h: 8 },
-      { type: "lentidao", x: 8, y: 2, w: 4, h: 4 },
+      { type: "lentidao", x: 8, y: 2, w: 4, h: 4, config: { lista: false } },
       { type: "alertas", x: 8, y: 6, w: 4, h: 4 },
     ],
   },
@@ -771,7 +771,7 @@ function widgetMarkup(inst) {
     <div class="widget-card" data-type="${inst.type}" data-size="md" style="--accent:${cor}; --accent-tint:${cor}1a;">
       ${cabecalhoFigmaMarkup(inst, titulo, {
         config: false, // cockpit-futuro: botão de configuração removido de todos os cabeçalhos (12/11/2026)
-        extra: !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao", "situacao", "prioridades"].includes(inst.type) ? modoToggleMarkup(inst) : "",
+        extra: inst.type === "lentidao" ? lentidaoSwitchMarkup(inst) : !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao", "situacao", "prioridades"].includes(inst.type) ? modoToggleMarkup(inst) : "",
       })}
       <div class="widget-body" id="widgetBody-${inst.id}"></div>
     </div>`;
