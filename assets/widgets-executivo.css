@@ -315,3 +315,10 @@ html[data-tema="escuro"] { --ex-marca-fundo: #261413; }
 .sit-geral { --est: var(--red); --est-fundo: var(--ex-marca-fundo); background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--red) 13%, transparent) 0%, transparent 62%), var(--ex-marca-fundo); }
 .sit-selo { background: var(--est-real); }
 .sit-kpi.is-foco { background: color-mix(in srgb, var(--red) 6%, var(--ex-card)); box-shadow: inset 0 -3px 0 var(--red); }
+
+/* Ajuste do Guery (13/11): indicador em foco só com o risco embaixo, sem fundo; e o âmbar de "atenção" sai do card,
+   que fica todo no vermelho da marca. Com isso "atenção" e "crítico" têm a mesma cor aqui: a diferença fica no texto
+   do selo e do título. (Em Prioridades agora e nos outros widgets as cores de severidade não mudaram.) */
+.sit-kpi.is-foco { background: none; }
+.sit.is-virou .sit-kpi.is-foco { animation: none; }
+.sit[data-estado="atencao"], .sit [data-estado="atencao"] { --est: var(--red); }
