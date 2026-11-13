@@ -1,8 +1,9 @@
-# Cockpit futuro: retomar (parado em 12/11/2026)
+# Cockpit futuro: retomar (parado em 13/11/2026)
 
 Cópia do `cockpit-prototipo` (branch `produto/cockpit-v1-2-comandos-icones` + alterações não commitadas de 11/11) para a
 apresentação do futuro do Cockpit. Só a versão **Geral** existe aqui (seletor de versões desligado em `versoes.js`).
 Servidor: `powershell -ExecutionPolicy Bypass -File .\_serve.ps1` → http://localhost:8757/
+GitHub (conta Data, SSH): `git@github-pessoal:Guery-Rodrigues-Data/CockpitFuturo.git`, branch `main`.
 
 ## O que foi feito
 
@@ -16,6 +17,17 @@ Servidor: `powershell -ExecutionPolicy Bypass -File .\_serve.ps1` → http://loc
 - **Câmeras**: carrossel 3D (coverflow) do top 10 por ocupação, ranking à esquerda, ocupação com barra grossa.
 - **Lentidão** (novo, `assets/widget-lentidao.js/.css`): Hoje x Média 90 dias (km), top 10 vias girando a cada 8 s,
   lista à esquerda em card largo.
+
+## 13/11/2026
+
+- Repositório publicado no GitHub (link acima). `Dados/` fica fora pelo `.gitignore` (capturas reais do legado).
+- **Tela inicial nova** (preset `inicial` em `assets/app.js`, capturada com `cockpitDump()`): esquerda Notificações,
+  Estação Pluviométrica e Waze; centro Mapa com Lentidão (Av. Sete de Setembro) embaixo; direita Câmeras, totais de
+  Dispositivos, totais de Alertas e lista de Alertas. Só aparece no primeiro acesso do navegador; quem já tem layout
+  salvo carrega pelo menu de telas de exemplo ("Tela inicial") ou abre em aba anônima.
+- **Vercel**: site fechado por Basic Auth (`middleware.js`). Variáveis em Settings > Environment Variables:
+  `SITE_USUARIO` (login) e `SITE_SENHA` (senha), nos três ambientes. Cadastradas depois do deploy: precisa Redeploy.
+  Sem as duas, o site responde "Acesso restrito." para todo mundo.
 
 Os ícones e medidas do Figma foram lidos pelo navegador logado (API `figma` da página), sem gastar crédito do MCP.
 
