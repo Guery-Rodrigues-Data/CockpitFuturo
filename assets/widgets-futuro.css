@@ -462,3 +462,220 @@ html[data-tema="escuro"] .wz img.wz-ico { filter: invert(1) hue-rotate(180deg); 
 .wz-kpi-num { display: flex; align-items: center; gap: 8px; }
 .wz-kpi img.wz-ico { width: 28px; }
 .wz-tipo img.wz-ico { width: 28px; }
+
+/* Alertas · modo Totais no padrão do Figma (Widget · Alertas, 498 px): resumo à esquerda, severidades à direita */
+.widget-card[data-type="alertas"] .widget-body:has(> .wz > .al2) { container-type: inline-size; }
+.al2 { display: flex; align-items: stretch; gap: 16px; height: 100%; padding: 16px; box-sizing: border-box; font-family: "Roboto", var(--font-body); color: #404041; }
+.al2-resumo { display: flex; flex-direction: column; justify-content: center; gap: 6px; flex: 0 0 155px; padding: 8px; }
+.al2-total { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 0; border: 0; border-radius: 6px; background: none; font-family: inherit; text-align: left; color: #404041; cursor: pointer; }
+.al2-total strong { font-size: 64px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.al2-total span { font-size: 20px; font-weight: 700; line-height: 1.25; color: #6e6e6e; }
+.al2-total:hover strong { color: #d93630; }
+.al2-total.is-selecionado { box-shadow: 0 0 0 2px #d93630; }
+.al2-resumo em { font-style: normal; font-size: 12px; font-weight: 600; color: #a3a3a3; }
+.al2-dist { display: flex; flex-direction: column; justify-content: center; gap: 8px; flex: 1; min-width: 0; }
+.al2-sev { display: flex; align-items: center; gap: 12px; width: 100%; height: 36px; padding: 8px; box-sizing: border-box; border: 0; border-radius: 6px; background: transparent; font-family: "Inter", var(--font-body); font-size: 14px; font-weight: 600; color: #20242b; text-align: left; }
+button.al2-sev { cursor: pointer; }
+button.al2-sev:hover { background: #f5f6f8; }
+/* a linha só ganha o fundo rosa quando está selecionada (clicada); sem seleção, todas ficam iguais */
+.al2-sev.is-selecionado { background: #f9dedc; box-shadow: inset 0 0 0 2px #d93630; }
+.al2-sev-cor { flex: none; width: 8px; height: 8px; border-radius: 4px; background: var(--c); }
+.al2-sev-rot { flex: none; width: 62px; }
+.al2-sev-trilho { flex: 1; min-width: 40px; height: 8px; border-radius: 4px; background: #ecedf2; overflow: hidden; }
+.al2-sev-trilho i { display: block; height: 100%; border-radius: 4px; background: var(--c); }
+.al2-sev b { flex: none; width: 30px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* card estreito (coluna de 4 ou menos): o resumo vai para cima e as severidades ocupam a largura */
+@container (max-width: 470px) {
+  .al2 { flex-direction: column; gap: 10px; padding: 12px; }
+  .al2-resumo { flex: none; flex-direction: row; align-items: flex-end; justify-content: space-between; padding: 0; }
+  .al2-total strong { font-size: 44px; }
+  .al2-total span { font-size: 15px; }
+  .al2-dist { justify-content: flex-start; }
+}
+
+/* Câmeras no padrão do Figma (13/11): identificação, situação, indicadores e controles */
+.car-ident { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.car-ident-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.car-ident-txt b { font-size: 14px; font-weight: 600; line-height: 1.25; color: #404041; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.car-ident-txt span { font-size: 10px; font-weight: 600; color: #6e6e6e; }
+.car-ampliar { flex: none; padding: 0; border: 0; background: none; font-family: inherit; font-size: 10px; font-weight: 600; color: #b3261e; cursor: pointer; }
+.car-ampliar:hover { text-decoration: underline; }
+.car-situacao { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; line-height: 1.25; }
+.car-situacao em { font-style: normal; font-size: 10px; font-weight: 400; opacity: 0.85; }
+.car-situacao[data-nivel="alta"] { background: #f9dedc; color: #b3261e; }
+.car-situacao[data-nivel="media"] { background: #ffecd0; color: #744c08; }
+.car-situacao[data-nivel="normal"] { background: #f2f4f7; color: #404041; }
+.car-indic { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.car-ind { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-width: 0; padding: 8px; border-radius: 8px; background: #f5f5f5; }
+.car-ind strong { font-size: 22px; font-weight: 700; line-height: 1.2; color: #404041; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.car-ind span { font-size: 10px; font-weight: 600; color: #a3a3a3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.car-ind[data-nivel="alta"] { background: #f9dedc; }
+.car-ind[data-nivel="alta"] strong { color: #b3261e; }
+.car-ind[data-nivel="media"] { background: #fff1dc; }
+.car-ind[data-nivel="media"] strong { color: #744c08; }
+.car-controles { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.car-controles .car-nav { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px; background: #404041; color: #fafafa; font-size: 18px; line-height: 1; cursor: pointer; }
+.car-controles .car-nav:hover { background: #2a2a2b; }
+.car-contador { font-size: 12px; font-weight: 600; color: #404041; font-variant-numeric: tabular-nums; }
+.car .wz-rodape span:last-child { text-align: right; }
+/* Em coluna (card estreito ou médio) a imagem tem altura fixa e o ranking rola dentro do que sobrar, para o bloco de
+   identificação, situação, indicadores e controles nunca sair do card */
+@container (max-width: 639px) {
+  .car-principal { flex: 0 0 auto; }
+  .car-palco { flex: 0 0 auto; height: 116px; min-height: 0; }
+  .car-dados { flex: 0 0 auto; gap: 8px; }
+  .car-corpo { gap: 8px; }
+  .car .wz-fim { gap: 6px; }
+  .car-ranking { flex: 1 1 0; min-height: 0; max-height: none; overflow: hidden; }
+  .car-ranking ol { flex: 1; }
+}
+
+/* Alertas · ajuste pelo Figma (13/11): separador entre resumo e severidades, rótulos em Roboto, rodapé com "Ver no mapa" */
+.al2 { flex-direction: column; gap: 12px; }
+.al2-main { display: flex; align-items: center; gap: 16px; flex: 1 1 0; min-height: 0; }
+.al2-main .al2-resumo { align-self: stretch; }
+.al2-sep { flex: none; align-self: stretch; width: 1px; background: #d4d4d4; }
+.al2-dist { padding: 8px 0; }
+.al2-sev { font-family: "Roboto", var(--font-body); font-size: 14px; font-weight: 600; color: #404041; }
+.al2-sev b { font-size: 14px; font-weight: 700; color: #404041; }
+.al2-sev-rot { color: #404041; }
+.al2-sev[data-sev="critico"] .al2-sev-trilho { background: #fafafa; }
+.al2-sev-trilho { background: #ecedf2; }
+.al2-rodape { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.al2-rodape span { font-size: 10px; font-weight: 600; color: #a3a3a3; }
+.al2-ver { padding: 0; border: 0; background: none; font-family: inherit; font-size: 12px; font-weight: 600; color: #d93630; cursor: pointer; }
+.al2-ver:hover { text-decoration: underline; }
+@container (max-width: 470px) {
+  .al2-main { flex-direction: column; align-items: stretch; gap: 10px; }
+  .al2-sep { display: none; }
+}
+
+/* Notificações no padrão do Figma (13/11): ver notificacoesMarkup em app.js. Cores de tema via variáveis --nf-*. */
+.widget-card[data-type="notificacoes"] .widget-body { padding: 0; }
+.nf { --nf-fundo-item: #f5f5f5; --nf-tinta: #404041; --nf-tinta-2: #a3a3a3; --nf-linha: #6e6e6e;
+  display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; padding: 12px 14px 10px; box-sizing: border-box;
+  font-family: "Roboto", var(--font-body); color: var(--nf-tinta); }
+.nf-cab, .nf-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) 62px 26px; align-items: center; gap: 8px; }
+.nf-cab { flex: none; padding: 8px 10px; border-radius: 4px; background: #6e6e6e; font-size: 11px; font-weight: 500; line-height: 15px; color: #fafafa; }
+.nf-hora-cab { text-align: right; }
+.nf-lista { flex: 1 1 0; min-height: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.nf-item { flex: none; padding: 8px; border-radius: 6px; background: var(--nf-fundo-item); }
+.nf-tipo { width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center; background: #aedaf0; }
+.nf-tipo i { width: 7px; height: 7px; border-radius: 50%; background: #0f66b3; }
+.nf-item[data-cat="verde"] .nf-tipo { background: #94d4a1; }
+.nf-item[data-cat="verde"] .nf-tipo i { background: #00911d; }
+.nf-item[data-cat="falha"] { background: #f9dedc; }
+.nf-item[data-cat="falha"] .nf-tipo { background: #f2b8b5; }
+.nf-item[data-cat="falha"] .nf-tipo i { background: #f3443c; }
+.nf-evento { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.nf-evento b { font-size: 12px; font-weight: 600; line-height: 15px; color: var(--nf-tinta); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-item[data-cat="falha"] .nf-evento b { color: #b3261e; }
+.nf-evento span { font-size: 10px; font-weight: 600; line-height: 12px; color: var(--nf-tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-hora { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 0; }
+.nf-hora span { font-size: 10px; font-weight: 600; color: var(--nf-tinta-2); white-space: nowrap; }
+.nf-hora b { font-size: 12px; font-weight: 600; color: var(--nf-tinta); font-variant-numeric: tabular-nums; }
+.nf-loc { width: 24px; height: 24px; padding: 0; display: grid; place-items: center; border: 1px solid #d4d4d4; border-radius: 4px; background: #fff; color: #697583; cursor: pointer; }
+.nf-loc svg { width: 13px; height: 13px; }
+.nf-loc:hover { color: var(--nf-tinta); }
+.nf-rodape { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.nf-rodape span { font-size: 10px; font-weight: 600; color: var(--nf-tinta-2); }
+.nf-rodape a { font-size: 12px; font-weight: 500; color: #d93630; text-decoration: none; }
+.nf-rodape a:hover { text-decoration: underline; }
+.nf-vazio, .notif-vazio { padding: 16px; font-size: 13px; color: var(--nf-tinta-2); }
+html[data-tema="escuro"] .nf { --nf-fundo-item: #1a1d21; --nf-tinta: #eef1f4; --nf-tinta-2: #7a8490; }
+html[data-tema="escuro"] .nf-item[data-cat="falha"] { background: #2e1413; }
+html[data-tema="escuro"] .nf-item[data-cat="falha"] .nf-evento b { color: #ff8a84; }
+html[data-tema="escuro"] .nf-cab { background: #2a2e34; }
+html[data-tema="escuro"] .nf-loc { background: #111316; border-color: #30363e; color: #aab2bd; }
+
+/* Notificações: valores exatos do Figma (Frame 19, 416 px). O botão de localizar fica oculto, como no Figma. */
+.nf { padding: 16px 16px 12px; gap: 8px; }
+.nf-cab { padding: 8px 56px 8px 42px; display: flex; justify-content: space-between; gap: 6px; border-radius: 4px; }
+.nf-cab .nf-hora-cab { flex: none; }
+.nf-item { grid-template-columns: 24px minmax(0, 1fr) 54px; gap: 8px; height: 44px; padding: 8px; box-sizing: border-box; }
+.nf-item .nf-acoes { display: none; }
+.nf-evento { gap: 3px; }
+.nf-hora span { font-size: 10px; }
+.nf-hora b { font-size: 12px; }
+.nf-lista { gap: 8px; }
+.nf-rodape { align-items: flex-end; }
+.nf-cab { white-space: nowrap; padding-right: 24px; }
+.nf-rodape span { white-space: nowrap; }
+.nf-rodape a { white-space: nowrap; }
+
+/* Seleção nos Alertas (pedido do Guery, 13/11): sem card vermelho; só um risquinho embaixo */
+.al2-sev.is-selecionado { background: none; box-shadow: inset 0 -2px 0 #d93630; }
+.al2-sev.is-selecionado:hover { background: #f5f6f8; }
+.al2-total.is-selecionado { box-shadow: inset 0 -3px 0 #d93630; }
+
+/* Alertas: linhas por tipo de alarme (nome pode ser longo, então corta com reticências) */
+.al2-sev { cursor: default; }
+.al2-sev-rot { width: 118px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Notificações (pedido do Guery, 13/11): todas as linhas cinzas, sem fundo rosa nem título vermelho na falha */
+.nf-item[data-cat="falha"] { background: var(--nf-fundo-item); }
+.nf-item[data-cat="falha"] .nf-evento b { color: var(--nf-tinta); }
+html[data-tema="escuro"] .nf-item[data-cat="falha"] { background: var(--nf-fundo-item); }
+html[data-tema="escuro"] .nf-item[data-cat="falha"] .nf-evento b { color: var(--nf-tinta); }
+
+/* Câmera única em destaque (13/11): a foto ocupa a parte de cima do card, sem carrossel */
+.car-foto { position: relative; flex: 1 1 auto; min-height: 150px; border-radius: 8px; overflow: hidden; background: #1f2329; cursor: pointer; }
+.car-foto img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
+.car-foto:focus-visible { outline: 2px solid #85a1c8; outline-offset: 2px; }
+.car-foto:hover img { filter: brightness(1.05); }
+.car-foto .car-rank { left: 10px; top: 10px; }
+.car-foto .car-ocup { right: 10px; top: 10px; }
+@container (max-width: 639px) {
+  .car-foto { flex: 0 0 auto; height: 150px; min-height: 0; }
+}
+
+/* Câmera em destaque (13/11, 2º ajuste): a foto ocupa cerca de 80% do card; identificação sobre a imagem; ocupação embaixo */
+.car-principal { flex: 1 1 auto; min-height: 0; }
+.car-foto { flex: 4 1 0; min-height: 120px; height: auto; border-radius: 10px; }
+.car-foto .car-rank { left: 10px; top: 10px; }
+.car-sobre { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 2px; padding: 34px 14px 12px; background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0)); color: #fff; pointer-events: none; }
+.car-sobre b { font-size: 15px; font-weight: 700; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.car-sobre span { font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, 0.82); }
+.car-dados { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.car-base { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 0; padding: 4px 2px 0; }
+.car-pct { display: flex; flex-direction: column; min-width: 0; }
+.car-pct strong { font-size: 36px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; color: #404041; }
+.car-pct strong small { margin-left: 2px; font-size: 16px; font-weight: 700; opacity: 0.7; }
+.car-pct span { font-size: 12px; font-weight: 600; color: #6e6e6e; }
+.car-pct[data-nivel="alta"] strong { color: #b3261e; }
+.car-pct[data-nivel="alta"] span { color: #b3261e; }
+.car-pct[data-nivel="media"] strong { color: #c77a06; }
+.car-base-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-size: 11px; font-weight: 600; color: #6e6e6e; text-align: right; }
+.car-base-lado .car-ampliar { margin-top: 2px; }
+/* ranking: se o interruptor "Lista" estiver ligado, divide o espaço com a foto (foto ~57%) */
+.car-ranking { flex: 2 1 0; min-height: 0; }
+.car.sem-lista .car-ranking { display: none; }
+.car.sem-lista .car-principal { flex: 1 1 auto; }
+@container (max-width: 639px) {
+  .car-foto { flex: 4 1 0; min-height: 120px; height: auto; }
+  .car-dados { flex: 0 0 auto; }
+  .car-ranking { flex: 2 1 0; min-height: 0; }
+}
+
+/* foto em destaque (3º ajuste, 13/11): a faixa de ocupação fica compacta e a foto leva o que sobra do card */
+.car-foto { flex: 1 1 0; }
+.car-dados { flex: 0 0 auto; }
+.car-base { flex: 0 0 auto; padding: 0; }
+.car-pct strong { font-size: 30px; }
+.car-ranking { flex: 1 1 0; min-height: 0; }
+@container (max-width: 639px) {
+  .car-foto { flex: 1 1 0; min-height: 150px; height: auto; }
+  .car-dados { flex: 0 0 auto; }
+  .car-ranking { flex: 1 1 0; min-height: 0; }
+}
+
+/* Alertas (Figma, 13/11): nome e contagem em cima, barra cheia embaixo */
+.al2-dist { gap: 14px; }
+.al2-sev { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 6px; height: auto; padding: 0; background: none; box-shadow: none; font-family: "Roboto", var(--font-body); font-size: 14px; font-weight: 600; color: #404041; }
+.al2-sev-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.al2-sev-rot { flex: 1; width: auto; min-width: 0; font-size: 14px; font-weight: 600; color: #404041; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.al2-sev-topo b { flex: none; font-size: 14px; font-weight: 700; color: #404041; font-variant-numeric: tabular-nums; }
+.al2-sev-trilho { display: block; width: 100%; height: 8px; border-radius: 99px; background: #e5e5e5; overflow: hidden; }
+.al2-sev-trilho i { display: block; height: 100%; border-radius: 99px; background: var(--c); }
+.al2-sev:hover { background: none; }
+.al2-sev-trilho { flex: none; min-width: 0; height: 8px; }

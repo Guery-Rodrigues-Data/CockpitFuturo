@@ -237,11 +237,12 @@ function situacaoMarkup(inst) {
     <div class="sit${virou ? " is-virou" : ""}" data-estado="${pior}">
       <div class="sit-geral">
         <div class="sit-ia" title="Resumo montado automaticamente a partir dos indicadores e das prioridades desta tela (simulação)">
-          ${SIT_ICONE_ANALISE}<span>Análise automática</span>
+          ${SIT_ICONE_ANALISE}<span>Antares IA</span>
           <span class="sit-caps">${caps.map((c, i) => `<button type="button" class="sit-cap${i < sitUi.cap ? " is-feito" : i === sitUi.cap ? " is-atual" : ""}" data-fut="sit-ir" data-i="${i}" title="${c.rotulo}" aria-label="${c.rotulo}"><i${i === sitUi.cap ? ` style="animation-duration:${SIT_CAPITULO_S}s;animation-delay:-${decorrido.toFixed(2)}s"` : ""}></i></button>`).join("")}</span>
           ${acao}
+          <span class="sit-selo"><i></i>${SIT_ESTADOS[pior].rotulo}</span>
         </div>
-        <div class="sit-titulo-linha"><b class="sit-titulo">${SIT_ESTADOS[pior].titulo}</b><span class="sit-selo"><i></i>${SIT_ESTADOS[pior].rotulo}</span></div>
+        <div class="sit-titulo-linha"><b class="sit-titulo">${SIT_ESTADOS[pior].titulo}</b></div>
         <p class="sit-frase"><em>${SIT_ICONES[cap.icone] || ""}${cap.rotulo}</em>${virou ? sitPalavras(cap.texto) : cap.texto}</p>
       </div>
       <div class="sit-kpis">

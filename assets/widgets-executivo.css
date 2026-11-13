@@ -55,7 +55,7 @@
     var(--est-fundo);
   box-shadow: inset 6px 0 0 var(--est);
 }
-.sit-ia { display: flex; align-items: center; gap: 8px; min-height: 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ex-tinta-2); white-space: nowrap; }
+.sit-ia { display: flex; align-items: center; gap: 10px; min-height: 30px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; text-transform: none; color: var(--ex-tinta); color: var(--ex-tinta-2); white-space: nowrap; }
 .sit-ia-icone { flex: none; display: inline-flex; align-items: flex-end; gap: 2px; width: 16px; height: 12px; }
 .sit-ia-icone i { flex: 1; border-radius: 1px; background: var(--est); transform-origin: bottom; animation: sit-barras 1.4s ease-in-out infinite; }
 .sit-ia-icone i:nth-child(1) { height: 45%; animation-delay: -0.9s; }
@@ -85,7 +85,7 @@
 .sit-acao i { font-style: normal; color: var(--est); }
 
 .sit-titulo-linha { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.sit-titulo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 27px; font-weight: 600; line-height: 1.12; letter-spacing: -0.025em; }
+.sit-titulo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 14px; font-weight: 500; font-weight: 600; line-height: 1.12; letter-spacing: -0.025em; }
 .sit-selo {
   flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px 4px 8px; border-radius: 999px;
   font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: var(--est);
@@ -141,7 +141,7 @@
 @container (max-height: 130px) {
   .sit-geral { gap: 4px; padding-top: 8px; padding-bottom: 8px; }
   .sit-frase { font-size: 12.5px; line-height: 1.35; }
-  .sit-titulo { font-size: 20px; }
+  .sit-titulo { font-size: 13px; }
   .sit-kpi strong { font-size: 30px; }
 }
 @container (max-height: 100px) {
@@ -229,7 +229,7 @@ html[data-tela="tv"] .widget-card:hover .fig-grip,
 html[data-tela="tv"] .widget-card:hover .fig-btn { opacity: 1; }
 html[data-tela="tv"] .modo-toggle { display: none; } /* TV não alterna Totais / Lista */
 
-html[data-tela="tv"] .sit-titulo { font-size: 28px; }
+html[data-tela="tv"] .sit-titulo { font-size: 16px; }
 html[data-tela="tv"] .sit-frase { font-size: 15.5px; }
 html[data-tela="tv"] .sit-acao { display: none; } /* TV não tem clique */
 html[data-tela="tv"] .sit-kpi-rotulo { font-size: 13.5px; }
@@ -328,3 +328,6 @@ html[data-tema="escuro"] { --ex-marca-fundo: #261413; }
 .sit-frase em { display: inline-flex; align-items: center; gap: 5px; vertical-align: baseline; }
 .sit-frase em svg { width: 13px; height: 13px; position: relative; top: 1px; }
 html[data-tela="tv"] .sit-kpi-rotulo svg { width: 17px; height: 17px; }
+
+/* selo do estado no fim da linha do rótulo de IA (pedido do Guery, 13/11) */
+.sit-ia .sit-selo { margin-left: auto; }

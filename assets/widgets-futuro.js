@@ -236,51 +236,46 @@ const ALERTA_SEV = {
 };
 const ICONE_DISPOSITIVO = '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.75" width="8" height="16.5" rx="2.5"/><circle cx="11" cy="7" r="1.4"/><circle cx="11" cy="11" r="1.4"/><circle cx="11" cy="15" r="1.4"/></svg>';
 
+// Modo Totais do card de Alertas, no padrão do Figma (13/11/2026): número grande à esquerda e, à direita, as
+// severidades com barra e contagem. Sai a lista "Alertas mais graves" deste modo (continua no modo Lista).
+const AL2_COR = { critico: "#E3323B", alto: "#ED9C08", medio: "#387BC4", baixo: "#9CA3AF", offline: "#434951" };
+// Modo Totais do card de Alertas (Figma, 13/11/2026): número grande à esquerda e, à direita, os tipos de alarme
+// mais frequentes (Lâmpada queimada, Comunicação...) com barra e contagem. Offline entra como "Sem comunicação".
+// Sai a lista "Alertas mais graves" deste modo (continua no modo Lista).
+const AL2_CORES = ["#E3323B", "#ED9C08", "#387BC4", "#9CA3AF", "#434951"];
+const AL2_TIPOS_MAX = 5;
+function alertaTipoRotulo(a) {
+  if (a.offline) return "Sem comunicação";
+  if (a.tipoAlarme && ALARMES_CATALOGO[a.tipoAlarme]) return ALARMES_CATALOGO[a.tipoAlarme].nome;
+  return a.descricao;
+}
 function alertasTotaisFigma(inst) {
   const lista = alertasFiltrados(inst.config.filtros);
   const afetados = new Set(lista.map((a) => a.equipamentoId)).size;
-  const ordem = (a) => (a.severidade ? SEVERIDADES.indexOf(a.severidade) : SEVERIDADES.length);
-  const graves = [...lista].sort((a, b) => ordem(a) - ordem(b));
   const sel = totaisSel(inst);
-  const comSev = Versoes.tem("alertas.severidade");
-  // offline não tem severidade: entra na barra e na legenda como uma faixa própria, no fim
-  const faixas = [...SEVERIDADES.map((s) => ({ chave: s, rotulo: s, tom: ALERTA_SEV[s].tom, n: lista.filter((a) => a.severidade === s).length })),
-    { chave: null, rotulo: "Offline", tom: "offline", n: lista.filter((a) => !a.severidade).length }];
-  const total = lista.length || 1;
-  const linhas = graves.slice(0, 30).map((a) => {
-    const eq = LiveState.equipamentoPorId(a.equipamentoId);
-    const tom = a.severidade ? ALERTA_SEV[a.severidade].tom : "offline";
-    return `
-        <button type="button" class="al-linha" data-sev="${tom}" data-action="lista-row" data-id="${inst.id}" data-tipo="equipamento" data-alvo="${a.equipamentoId}" title="Abrir o dispositivo">
-          <span class="al-linha-topo"><b>${eq ? eq.nome : a.equipamentoId}</b><em>${a.severidade || "Offline"}</em></span>
-          <span class="al-linha-pe">${a.offline ? "Dispositivo sem comunicação" : a.descricao}${a.dataHora ? ` · ${a.dataHora}` : ""}</span>
-        </button>`;
-  }).join("");
+  const cont = new Map();
+  lista.forEach((a) => { const k = alertaTipoRotulo(a); cont.set(k, (cont.get(k) || 0) + 1); });
+  const tipos = [...cont.entries()].sort((x, y) => y[1] - x[1]).slice(0, AL2_TIPOS_MAX);
+  const maior = Math.max(1, ...tipos.map((t) => t[1]));
+  const linhas = tipos.map(([rotulo, n], i) => `
+          <div class="al2-sev" style="--c:${AL2_CORES[i % AL2_CORES.length]}" title="${rotulo}: ${n}">
+            <div class="al2-sev-topo"><span class="al2-sev-rot">${rotulo}</span><b>${n}</b></div>
+            <span class="al2-sev-trilho"><i style="width:${((n / maior) * 100).toFixed(1)}%"></i></span>
+          </div>`).join("");
   return `
-    <div class="wz al">
-      <div class="al-topo">
-        <button type="button" class="al-total${sel}" data-action="totais-clicar" data-id="${inst.id}" aria-pressed="${sel ? "true" : "false"}" title="Mostrar no mapa os dispositivos com alerta">
-          <strong>${lista.length}</strong><span>Alertas ativos</span>
-        </button>
-        <div class="al-afetados"><strong>${afetados}</strong><span>Dispositivos<br>afetados</span></div>
+    <div class="al2">
+      <div class="al2-main">
+        <div class="al2-resumo">
+          <button type="button" class="al2-total${sel}" data-action="totais-clicar" data-id="${inst.id}" aria-pressed="${sel ? "true" : "false"}" title="Mostrar no mapa os dispositivos com alerta">
+            <strong>${lista.length}</strong><span>Alertas ativos</span>
+          </button>
+          <em>${afetados} dispositivos afetados</em>
+        </div>
+        ${tipos.length ? `<span class="al2-sep" aria-hidden="true"></span><div class="al2-dist">${linhas}</div>` : ""}
       </div>
-      ${comSev ? `<div class="al-barra" role="img" aria-label="Distribuição por severidade">
-        ${faixas.filter((f) => f.n).map((f) => `<i data-sev="${f.tom}" style="flex-grow:${f.n / total}" title="${f.rotulo}: ${f.n}"></i>`).join("")}
-      </div>
-      <div class="al-legenda">
-        ${faixas.map((f) => {
-          const ativo = f.chave && typeof recorteAlertasAtivo === "function" && recorteAlertasAtivo(inst.id, f.chave);
-          return f.chave
-            ? `<button type="button" class="al-leg${ativo ? " is-selecionado" : ""}" data-sev="${f.tom}" data-fut="alertas-sev" data-id="${inst.id}" data-chave="${f.chave}" title="Mostrar só os de severidade ${f.rotulo} no mapa"><i></i>${f.rotulo}<b>${f.n}</b></button>`
-            : (f.n ? `<span class="al-leg" data-sev="offline"><i></i>Offline<b>${f.n}</b></span>` : "");
-        }).join("")}
-      </div>` : ""}
-      <hr class="wz-linha">
-      <div class="wz-trechos-head"><span>Alertas mais graves</span><span class="al-contagem"></span></div>
-      <div class="wz-trechos al-lista" data-total="${graves.length}">${linhas || `<div class="al-vazio">Nenhum alerta ativo com esse filtro.</div>`}</div>
-      <div class="wz-fim">
-        <hr class="wz-linha wz-linha-forte">
-        <div class="wz-rodape al-rodape"><span title="${resumoFiltroTitle(inst)}">${resumoFiltroCard(inst)}</span>${verTudoAlertasMarkup()}</div>
+      <div class="al2-rodape">
+        <span>Última leitura: ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+        <button type="button" class="al2-ver" data-action="totais-clicar" data-id="${inst.id}">Ver no mapa</button>
       </div>
     </div>`;
 }
@@ -445,96 +440,92 @@ function carrosselPos(i, atual, n) {
 
 // Interruptor "Lista" do cabeçalho do card (mesmo do widget Lentidão): ligado = carrossel + ranking de ocupação;
 // desligado = só o carrossel. Fica salvo na instância (config.lista); card salvo antes de o interruptor existir vale ligado.
-const camerasComLista = (inst) => !inst || inst.config.lista !== false;
+const camerasComLista = (inst) => !!inst && inst.config.lista === true; // 13/11: padrão desligado, a câmera fica grande; quem quiser o ranking liga o interruptor
 function camerasSwitchMarkup(inst) {
   return `<button type="button" class="lt-switch" data-fut="car-lista" data-id="${inst.id}" role="switch" aria-checked="${camerasComLista(inst)}" title="Mostrar ou esconder o ranking de ocupação">
       <span class="lt-switch-trilho"><i></i></span>Lista
     </button>`;
 }
 
+// Widget Câmeras no padrão do Figma (13/11/2026): identificação, situação, palco com as câmeras ao lado,
+// três indicadores, controles de navegação e rodapé. Sem setas nem pontinhos em cima da imagem.
+// Câmeras (13/11/2026, pedido do Guery): uma câmera grande, sem rodízio nem setas. A escolha é feita pelo ranking
+// (quando o interruptor "Lista" está ligado). A câmera de maior ocupação é a que abre por padrão.
+// interior da foto: imagem cheia, ranking no canto e identificação sobre a imagem (embaixo)
+function camFotoInner(d) {
+  return `<img src="${d.img}" alt="" draggable="false">
+          <span class="car-rank">#${d.pos}</span>
+          <div class="car-sobre"><b title="${d.nome}">${d.nome}</b><span>CAM ${String(d.n).padStart(4, "0")}</span></div>`;
+}
+
+// Câmeras (13/11/2026, pedido do Guery): uma câmera grande (cerca de 80% do card), sem rodízio nem setas.
+// Identificação sobre a imagem; ocupação embaixo. A escolha é feita pelo ranking (interruptor "Lista").
 function camerasCarrosselMarkup(inst) {
   const itens = carrosselItens();
   const n = itens.length;
+  const d = itens[carUi.atual];
   return `
     <div class="car${camerasComLista(inst) ? "" : " sem-lista"}">
      <div class="car-corpo">
       <div class="car-principal">
-      <div class="car-sub"><span>Maior ocupação agora</span><span class="car-giro" title="Gira a cada ${CARROSSEL_GIRO_S} s; pausa com o mouse em cima">Top ${n}</span></div>
-      <div class="car-palco">
-        ${itens.map((d, i) => `
-          <div class="car-slide" data-i="${i}" data-pos="${carrosselPos(i, carUi.atual, n)}" ${i === carUi.atual ? `data-action="camera-abrir"` : `data-fut="car-ir"`} data-cam="${d.n}" data-nome="${d.nome}" data-img="${d.img}" role="button" tabindex="${i === carUi.atual ? 0 : -1}" title="${i === carUi.atual ? "Abrir conexão com a câmera" : "Trazer para a frente"}">
-            <img src="${d.img}" alt="" draggable="false">
-            <span class="car-rank">#${d.pos}</span>
-            <span class="car-ocup" data-nivel="${nivelOcupacao(d.ocupacao)}">${d.ocupacao}%</span>
-          </div>`).join("")}
-        <button type="button" class="car-seta car-ant" data-fut="car-ant" aria-label="Câmera anterior">‹</button>
-        <button type="button" class="car-seta car-prox" data-fut="car-prox" aria-label="Próxima câmera">›</button>
-      </div>
-      <div class="car-pontos">${itens.map((_, i) => `<button type="button" class="${i === carUi.atual ? "is-atual" : ""}" data-fut="car-ir" data-i="${i}" aria-label="Câmera ${i + 1}"></button>`).join("")}</div>
-      <div class="car-dados">${carrosselDadosMarkup(itens[carUi.atual], n)}</div>
+        <div class="car-foto" data-action="camera-abrir" data-cam="${d.n}" data-nome="${d.nome}" data-img="${d.img}" role="button" tabindex="0" title="Abrir conexão com a câmera">${camFotoInner(d)}</div>
+        <div class="car-dados">${carrosselDadosMarkup(d, n)}</div>
       </div>
       <div class="car-ranking">
         <div class="car-ranking-head"><span>Ranking de ocupação</span><span>%</span></div>
-        <ol>${itens.map((d, i) => `
-          <li><button type="button" class="car-rk${i === carUi.atual ? " is-atual" : ""}" data-fut="car-ir" data-i="${i}" data-nivel="${nivelOcupacao(d.ocupacao)}" title="Ver no carrossel">
-            <span class="car-rk-pos">${d.pos}</span>
-            <span class="car-rk-nome" title="${d.nome}">${d.nome}</span>
-            <span class="car-rk-barra"><i style="width:${d.ocupacao}%"></i></span>
-            <b>${d.ocupacao}</b>
+        <ol>${itens.map((x, i) => `
+          <li><button type="button" class="car-rk${i === carUi.atual ? " is-atual" : ""}" data-fut="car-ir" data-i="${i}" data-nivel="${nivelOcupacao(x.ocupacao)}" title="Ver esta câmera">
+            <span class="car-rk-pos">${x.pos}</span>
+            <span class="car-rk-nome" title="${x.nome}">${x.nome}</span>
+            <span class="car-rk-barra"><i style="width:${x.ocupacao}%"></i></span>
+            <b>${x.ocupacao}</b>
           </button></li>`).join("")}
         </ol>
       </div>
      </div>
       <div class="wz-fim">
         <hr class="wz-linha wz-linha-forte">
-        <div class="wz-rodape"><span>Dados ilustrativos · ocupação simulada</span><span class="wz-hora">${camHora().slice(0, 5)}</span></div>
+        <div class="wz-rodape"><span>Leitura: ${camHora()}</span><span>Priorização automática · dados ilustrativos</span></div>
       </div>
     </div>`;
 }
 
+// bloco de baixo do card (Figma): identificação, situação, indicadores e controles de navegação
+// bloco de baixo do card: identificação, situação e indicadores (sem controles de navegação)
+// faixa de baixo: ocupação em destaque e, ao lado, posição no ranking, hora da última imagem e o link para ampliar
 function carrosselDadosMarkup(d, n) {
+  const niv = nivelOcupacao(d.ocupacao);
+  const rotulo = { alta: "Ocupação crítica", media: "Ocupação alta", normal: "Ocupação normal" }[niv];
   return `
-    <div class="car-titulo"><b title="${d.nome}">${d.nome}</b><span>CAM ${String(d.n).padStart(4, "0")}</span></div>
-    <div class="car-metricas">
-      <div class="car-ocupacao" data-nivel="${nivelOcupacao(d.ocupacao)}">
-        <div class="car-ocup-linha">
-          <span class="plv-rotulo">Ocupação</span>
-          <span class="car-nivel">${{ alta: "Alta", media: "Média", normal: "Normal" }[nivelOcupacao(d.ocupacao)]}</span>
-        </div>
-        <strong>${d.ocupacao}<small>%</small></strong>
-        <span class="car-barra"><i style="width:${d.ocupacao}%"></i></span>
-      </div>
-      <div class="car-lado">
-        <div><span class="plv-rotulo">Ranking</span><b>${d.pos}º de ${n}</b></div>
-        <div><span class="plv-rotulo">Última imagem</span><b>${camHora()}</b></div>
+    <div class="car-base">
+      <div class="car-pct" data-nivel="${niv}"><strong>${d.ocupacao}<small>%</small></strong><span>${rotulo}${d.pos === 1 ? " · câmera priorizada" : ""}</span></div>
+      <div class="car-base-lado">
+        <span>Última imagem ${camHora().slice(0, 8)}</span>
+        <button type="button" class="car-ampliar" data-fut="car-ampliar">Ampliar câmera</button>
       </div>
     </div>`;
 }
 
 // gira trocando só o data-pos (a transição do CSS anima) e reescreve os dados de baixo
+// troca a câmera em destaque (pelo ranking). Sem rodízio automático.
 function carrosselIr(i) {
   const n = CARROSSEL_CAMS.length;
   carUi.atual = ((i % n) + n) % n;
-  carUi.proxGiro = Date.now() + CARROSSEL_GIRO_S * 1000;
+  const itens = carrosselItens();
+  const d = itens[carUi.atual];
   document.querySelectorAll(".car").forEach((car) => {
-    car.querySelectorAll(".car-slide").forEach((s) => {
-      const k = Number(s.dataset.i), frente = k === carUi.atual;
-      s.dataset.pos = carrosselPos(k, carUi.atual, n);
-      s.tabIndex = frente ? 0 : -1;
-      s.title = frente ? "Abrir conexão com a câmera" : "Trazer para a frente";
-      if (frente) { s.dataset.action = "camera-abrir"; delete s.dataset.fut; } else { delete s.dataset.action; s.dataset.fut = "car-ir"; }
-    });
-    car.querySelectorAll(".car-pontos button").forEach((b, k) => b.classList.toggle("is-atual", k === carUi.atual));
+    const foto = car.querySelector(".car-foto");
+    if (foto) {
+      foto.dataset.cam = d.n;
+      foto.dataset.nome = d.nome;
+      foto.dataset.img = d.img;
+      foto.innerHTML = camFotoInner(d);
+    }
+    car.querySelector(".car-dados").innerHTML = carrosselDadosMarkup(d, n);
     car.querySelectorAll(".car-rk").forEach((b, k) => b.classList.toggle("is-atual", k === carUi.atual));
-    car.querySelector(".car-dados").innerHTML = carrosselDadosMarkup(carrosselItens()[carUi.atual], n);
   });
 }
 
-setInterval(() => {
-  const car = document.querySelector(".car");
-  if (!car || (typeof camAberta !== "undefined" && camAberta) || car.matches(":hover")) { carUi.proxGiro = Math.max(carUi.proxGiro, Date.now() + 1500); return; }
-  if (Date.now() >= carUi.proxGiro) carrosselIr(carUi.atual + 1);
-}, 500);
 
 document.addEventListener("click", (ev) => {
   const el = ev.target.closest('[data-fut^="car-"]');
@@ -544,6 +535,10 @@ document.addEventListener("click", (ev) => {
   if (acao === "car-ant") carrosselIr(carUi.atual - 1);
   else if (acao === "car-prox") carrosselIr(carUi.atual + 1);
   else if (acao === "car-ir") carrosselIr(Number(el.dataset.i));
+  else if (acao === "car-ampliar") { // abre a mesma conexão que clicar na câmera da frente
+    const frente = document.querySelector(".car-foto");
+    if (frente) abrirCamera(frente);
+  }
   else if (acao === "car-lista") {
     const inst = instances.find((i) => i.id === el.dataset.id);
     if (!inst) return;

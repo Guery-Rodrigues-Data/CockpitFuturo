@@ -596,7 +596,7 @@ const PRESETS = [
     widgets: [
       { type: "situacao", x: 0, y: 0, w: 12, h: 2 },
       { type: "mapa", x: 0, y: 2, w: 5, h: 8, config: { filtros: { camadas: { subareas: true, corredores: true, controladores: true } } } },
-      { type: "prioridades", x: 5, y: 2, w: 3, h: 8 },
+      { type: "notificacoes", x: 5, y: 2, w: 3, h: 8 },
       { type: "lentidao", x: 8, y: 2, w: 4, h: 4, config: { lista: false } },
       { type: "alertas", x: 8, y: 6, w: 4, h: 4 },
     ],
@@ -608,11 +608,11 @@ const PRESETS = [
     descricao: "Para a TV da sala de operação: situação da cidade, mapa grande, prioridades, câmeras, trânsito, chuva e alertas, tudo de uma vez e sem rolagem.",
     widgets: [
       { type: "situacao", x: 0, y: 0, w: 12, h: 2 },
-      { type: "prioridades", x: 0, y: 2, w: 3, h: 6 },
+      { type: "notificacoes", x: 0, y: 2, w: 3, h: 6 },
       { type: "alertas", x: 0, y: 8, w: 3, h: 4 },
       { type: "mapa", x: 3, y: 2, w: 5, h: 6, config: { filtros: { camadas: { subareas: true, corredores: true, controladores: true } } } },
       { type: "lentidao", x: 3, y: 8, w: 5, h: 4 },
-      { type: "cameras", x: 8, y: 2, w: 4, h: 5 },
+      { type: "cameras", x: 8, y: 2, w: 4, h: 5, config: { lista: false } },
       { type: "waze", x: 8, y: 7, w: 2, h: 5 },
       { type: "pluviometro", x: 10, y: 7, w: 2, h: 5 },
     ],
@@ -770,7 +770,7 @@ function widgetMarkup(inst) {
   return `
     <div class="widget-card" data-type="${inst.type}" data-size="md" style="--accent:${cor}; --accent-tint:${cor}1a;">
       ${cabecalhoFigmaMarkup(inst, titulo, {
-        config: false, // cockpit-futuro: botão de configuração removido de todos os cabeçalhos (12/11/2026)
+        config: inst.type === "notificacoes", // cockpit-futuro: só Notificações tem o filtro (igual ao Figma, 13/11/2026); os demais seguem sem botão
         extra: inst.type === "lentidao" ? lentidaoSwitchMarkup(inst) : inst.type === "cameras" ? camerasSwitchMarkup(inst) : !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao", "situacao", "prioridades"].includes(inst.type) ? modoToggleMarkup(inst) : "",
       })}
       <div class="widget-body" id="widgetBody-${inst.id}"></div>
@@ -1057,32 +1057,41 @@ function eventosPermitidos(filtros) {
   const sel = ((filtros && filtros.eventos) || todas).filter((c) => todas.includes(c));
   return sel;
 }
+// Feed de Notificações no padrão do Figma (13/11/2026): cabeçalho cinza, linha com o tipo à esquerda,
+// evento e local no meio, data e hora à direita. Falha (alarme e offline) sai em rosa; plano em verde; o resto em azul.
+const NF_CATEGORIA = { alarme: "falha", offline: "falha", plano: "verde" };
 function notificacoesMarkup(inst) {
   const tiposDisp = (inst.config.filtros && inst.config.filtros.tipos) || CATEGORIAS_EQUIPAMENTO.map((c) => c.id);
   const evPermitidos = eventosPermitidos(inst.config.filtros);
-  const comMapa = CockpitBus.mapaAtivo(); // Fase 3: o botão de localizar só existe com widget de Mapa na tela
+  const comMapa = CockpitBus.mapaAtivo(); // o botão de localizar só existe com widget de Mapa na tela
   const eventos = LiveState.getEventos().filter((e) => {
     if (!evPermitidos.includes(categoriaDoEvento(e.tipo))) return false;
     const eq = LiveState.equipamentoPorId(e.equipamentoId);
     return !eq || (tiposDisp.includes(eq.tipo) && tipoNoGeral(eq.tipo));
   });
-  if (!eventos.length) return `<div class="notif-vazio">Nenhuma notificação hoje. Os eventos do dia aparecem aqui assim que acontecem.</div>`;
-  const cabecalho = `<li class="notif-cab" aria-hidden="true"><span></span><span>Evento</span><span class="notif-hora-cab">Data e hora</span><span></span></li>`;
-  return `<ul class="notif-lista">${cabecalho}${eventos.map((e) => {
-    const t = NOTIFICACAO_TIPOS[e.tipo] || NOTIFICACAO_TIPOS.alarme;
-    const d = new Date(e.ts);
-    const data = d.toLocaleDateString("pt-BR");
-    const hora = d.toLocaleTimeString("pt-BR");
-    // ações no fim da linha: localizar no mapa (cor do tipo do evento) e o menu "..." com mais opções
-    return `<li class="notif-item" style="--tipo-cor:${t.cor}">
-      <span class="notif-ponto" style="background:${t.cor}" title="${t.rotulo}" aria-hidden="true"></span>
-      <div class="notif-corpo"><div class="notif-texto" title="${e.texto}">${e.texto}</div><div class="notif-onde" title="${e.nome}">${e.nome}</div></div>
-      <time class="notif-hora" datetime="${d.toISOString()}"><span>${data}</span><span>${hora}</span></time>
-      <div class="notif-acoes">
-        ${comMapa ? `<button type="button" class="notif-loc" data-action="notificacao-row" data-eq="${e.equipamentoId}" title="Ver no mapa" aria-label="Ver ${e.nome} no mapa">${ICONS.mapPin}</button>` : ""}
-      </div>
-    </li>`;
-  }).join("")}</ul>`;
+  const cabecalho = `<div class="nf-cab" aria-hidden="true"><span></span><span>Evento / Localização</span><span class="nf-hora-cab">Data e hora</span><span></span></div>`;
+  const corpo = !eventos.length
+    ? `<div class="notif-vazio">Nenhuma notificação hoje. Os eventos do dia aparecem aqui assim que acontecem.</div>`
+    : eventos.map((e) => {
+        const t = NOTIFICACAO_TIPOS[e.tipo] || NOTIFICACAO_TIPOS.alarme;
+        const d = new Date(e.ts);
+        const cat = NF_CATEGORIA[e.tipo] || "azul";
+        return `<li class="nf-item" data-cat="${cat}" title="${t.rotulo}">
+          <span class="nf-tipo" aria-hidden="true"><i></i></span>
+          <div class="nf-evento"><b title="${e.texto}">${e.texto}</b><span title="${e.nome}">${e.nome}</span></div>
+          <time class="nf-hora" datetime="${d.toISOString()}"><span>${d.toLocaleDateString("pt-BR")}</span><b>${d.toLocaleTimeString("pt-BR")}</b></time>
+          <div class="nf-acoes">${comMapa ? `<button type="button" class="nf-loc" data-action="notificacao-row" data-eq="${e.equipamentoId}" title="Ver no mapa" aria-label="Ver ${e.nome} no mapa">${ICONS.mapPin}</button>` : ""}</div>
+        </li>`;
+      }).join("");
+  return `<div class="nf">
+    ${cabecalho}
+    <ul class="nf-lista">${eventos.length ? corpo : ""}</ul>
+    ${eventos.length ? "" : corpo}
+    <div class="nf-rodape">
+      <span>Mais recentes primeiro · Dados ilustrativos</span>
+      <a href="${URL_DASH_ALERTAS}" target="_blank" rel="noopener">Ver histórico</a>
+    </div>
+  </div>`;
 }
 
 // Menu "..." da linha. Fica no body (posição fixa) porque a lista do widget corta o que passa da borda.
