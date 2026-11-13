@@ -331,3 +331,42 @@ html[data-tela="tv"] .sit-kpi-rotulo svg { width: 17px; height: 17px; }
 
 /* selo do estado no fim da linha do rótulo de IA (pedido do Guery, 13/11) */
 .sit-ia .sit-selo { margin-left: auto; }
+
+/* Ícone de IA: símbolo da logo Dataprom girando devagar (pedido do Guery, 13/11) */
+.sit-ia-logo { flex: none; width: 18px; height: 19px; color: var(--red); transform-origin: 50% 50%; animation: sit-logo-gira 6s linear infinite; }
+@keyframes sit-logo-gira { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+html[data-tema="escuro"] .sit-ia-logo { color: #ff6b63; }
+@media (prefers-reduced-motion: reduce) { .sit-ia-logo { animation: none; } }
+
+/* Ícone de IA (13/11, 2º ajuste): o símbolo da logo entra girando de lado, gira, some encolhendo e explode em partículas.
+   Ciclo de 5 s em CSS (keyframes), sem JavaScript de animação. */
+.sit-ia-logo-wrap { position: relative; display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; perspective: 160px; }
+.sit-ia-logo { grid-area: 1 / 1; width: 18px; height: 19px; color: var(--red); transform-style: preserve-3d; animation: sit-logo-ciclo 5s ease-in-out infinite; }
+html[data-tema="escuro"] .sit-ia-logo { color: #ff6b63; }
+.sit-burst { grid-area: 1 / 1; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: var(--red); opacity: 0; animation: sit-explode 5s ease-out infinite; }
+html[data-tema="escuro"] .sit-burst { background: #ff6b63; }
+.sit-ia-anel { grid-area: 1 / 1; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--red); opacity: 0; transform: scale(0.3); animation: sit-anel 5s ease-out infinite; }
+@keyframes sit-logo-ciclo {
+  0%   { transform: rotateY(-100deg) scale(0.35); opacity: 0; }
+  12%  { transform: rotateY(0deg) scale(1.1); opacity: 1; }
+  20%  { transform: rotateY(0deg) scale(1); opacity: 1; }
+  58%  { transform: rotateY(360deg) scale(1); opacity: 1; }
+  66%  { transform: rotateY(360deg) scale(0.15); opacity: 0; }
+  100% { transform: rotateY(360deg) scale(0.15); opacity: 0; }
+}
+@keyframes sit-explode {
+  0%, 64%  { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  66%      { opacity: 1; transform: translate(0, 0) scale(1); }
+  86%      { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
+  100%     { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
+}
+@keyframes sit-anel {
+  0%, 64%  { opacity: 0; transform: scale(0.3); }
+  66%      { opacity: 0.9; transform: scale(0.6); }
+  90%      { opacity: 0; transform: scale(2.1); }
+  100%     { opacity: 0; transform: scale(2.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sit-ia-logo, .sit-burst, .sit-ia-anel { animation: none; }
+  .sit-ia-logo { opacity: 1; transform: none; }
+}
