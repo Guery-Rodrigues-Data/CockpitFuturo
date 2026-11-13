@@ -452,3 +452,8 @@ button.al-leg:hover { color: #32383f; }
 
 /* interruptor "Lista" desligado no cabeçalho do card: some o ranking e o carrossel ocupa o card todo */
 .car.sem-lista .car-ranking { display: none; }
+
+/* ícones oficiais do Waze: tamanho fixo; na TV escura são desinvertidos para manter a cor da marca */
+.wz img.wz-ico { display: block; width: 24px; height: auto; flex: none; }
+.wz-kpi img.wz-ico { width: 28px; }
+html[data-tema="escuro"] .wz img.wz-ico { filter: invert(1) hue-rotate(180deg); }

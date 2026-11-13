@@ -104,6 +104,16 @@ const WAZE_ICONES = {
   clock: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 6C10.5 8.48 8.48 10.5 6 10.5C3.51 10.5 1.5 8.48 1.5 6C1.5 3.51 3.51 1.5 6 1.5C8.48 1.5 10.5 3.51 10.5 6Z"/><path d="M6 3.5V6L7.5 7"/></svg>',
 };
 
+// ícones oficiais do Waze (arquivos em assets/waze/, exportados do Figma/Waze): pinos com sombra, cor da marca
+const WAZE_IMG = {
+  acidente: "assets/waze/acidentes.svg",
+  perigo: "assets/waze/perigos.svg",
+  interdicao: "assets/waze/interdicoes.svg",
+  alertas: "assets/waze/alertas.svg",
+  lentidao: "assets/waze/lentidao.svg",
+};
+const wazeImg = (id) => `<img class="wz-ico" src="${WAZE_IMG[id]}" alt="" draggable="false">`;
+
 // quantas ruas cabem depende da altura do card (medida em wazeAjustar); começa em 2, como no Figma
 const wazeUi = { inicio: 0, porPagina: 2 };
 const fmtKm = (n) => n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -124,11 +134,11 @@ function wazeMarkup() {
     <div class="wz">
       <div class="wz-area">${WAZE_ICONES.pin}<b>${d.area}</b></div>
       <div class="wz-resumo">
-        <div class="wz-kpi" data-tom="alertas">${WAZE_ICONES.alert}<strong>${d.alertas}</strong><span>Alertas recebidos</span></div>
-        <div class="wz-kpi" data-tom="lentidao">${WAZE_ICONES.car}<strong>${d.lentidao}</strong><span>Trechos com lentidão</span></div>
+        <div class="wz-kpi" data-tom="alertas">${wazeImg("alertas")}<strong>${d.alertas}</strong><span>Alertas recebidos</span></div>
+        <div class="wz-kpi" data-tom="lentidao">${wazeImg("lentidao")}<strong>${d.lentidao}</strong><span>Trechos com lentidão</span></div>
       </div>
       <div class="wz-tipos">
-        ${d.tipos.map((t) => `<div class="wz-tipo" data-tipo="${t.id}"><div class="wz-tipo-qtd">${WAZE_ICONES[t.icone]}<strong>${t.n}</strong></div><span>${t.label}</span></div>`).join("")}
+        ${d.tipos.map((t) => `<div class="wz-tipo" data-tipo="${t.id}"><div class="wz-tipo-qtd">${wazeImg(t.id)}<strong>${t.n}</strong></div><span>${t.label}</span></div>`).join("")}
       </div>
       <hr class="wz-linha">
       <div class="wz-trechos-head">

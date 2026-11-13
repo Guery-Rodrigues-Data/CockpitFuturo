@@ -57,6 +57,9 @@ da cidade nem cruzava as fontes. Entraram dois widgets e duas telas prontas.
 - **Lentidão: interruptor "Lista"** no cabeçalho do card (13/11): ligado mostra a lista do top 10 e o gráfico,
   desligado só o gráfico. Fica salvo por card (`config.lista`). Em card estreito a lista vai para baixo do gráfico
   (antes sumia). Na Visão executiva o card nasce com a lista desligada.
+- **Resumo do Waze: ícones oficiais** (13/11): Alertas, Lentidão, Acidentes, Perigos e Interdições agora são os SVG
+  de `assets/waze/` (copiados de `Documents\Icones waze\`), no lugar dos desenhos antigos. Na TV escura são
+  desinvertidos para manter a cor da marca.
 - **Câmeras: mesmo interruptor "Lista"** (13/11): ligado mostra o carrossel e o ranking de ocupação, desligado só o
   carrossel. Também salvo por card (`config.lista`).
 
