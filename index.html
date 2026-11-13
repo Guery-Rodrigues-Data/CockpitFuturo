@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="assets/style.css" />
 <link rel="stylesheet" href="assets/widgets-futuro.css" />
 <link rel="stylesheet" href="assets/widget-lentidao.css" />
+<link rel="stylesheet" href="assets/widgets-executivo.css" />
 <style>
   .leaflet-container { background: #e5e5e5; font-family: var(--font-body); }
 </style>
@@ -90,6 +91,20 @@
     <button type="button" class="btn-primary" data-action="toggle-library" aria-label="Adicionar widget" title="Adicionar widget"><span class="fab-rotulo">Adicionar widget</span><span id="iconAdd1"></span></button>
     <div class="widget-library" id="widgetLibrary">
       <div class="widget-library-title">Biblioteca de Widgets</div>
+      <button type="button" class="submenu-item" data-action="add-widget" data-type="situacao">
+        <span class="submenu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></span>
+        <span>
+          <span class="submenu-item-title">Situação da cidade <span class="submenu-item-tag">Único</span></span>
+          <span class="submenu-item-desc">Leitura única da operação (normal, atenção ou crítico) e os indicadores que explicam o estado.</span>
+        </span>
+      </button>
+      <button type="button" class="submenu-item" data-action="add-widget" data-type="prioridades">
+        <span class="submenu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h7M4 18h4M17 5v14M17 19l-3-3M17 19l3-3"/></svg></span>
+        <span>
+          <span class="submenu-item-title">Prioridades agora</span>
+          <span class="submenu-item-desc">O que pede ação primeiro, cruzando alertas, trânsito e chuva.</span>
+        </span>
+      </button>
       <button type="button" class="submenu-item" data-action="add-widget" data-type="mapa">
         <span class="submenu-item-icon" id="libIconMapa"></span>
         <span>
@@ -225,6 +240,7 @@
 <script src="assets/map.js"></script>
 <script src="assets/widgets-futuro.js"></script>
 <script src="assets/widget-lentidao.js"></script>
+<script src="assets/widgets-executivo.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/grade-horarios.js"></script>
 <script src="assets/painel-controlador.js"></script>

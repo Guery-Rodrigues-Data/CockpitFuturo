@@ -59,6 +59,8 @@ const WIDGET_META = {
   pluviometro: { label: "Estação Pluviométrica", desc: "Leitura de chuva de uma estação: acumulado, intensidade e últimas 6 h.", icon: ICONS_FUTURO.chuva, unico: false },
   waze: { label: "Resumo do Waze", desc: "Trânsito e ocorrências do Waze: alertas recebidos e trechos com maior atraso.", icon: ICONS_FUTURO.transito, unico: true },
   lentidao: { label: "Lentidão", desc: "Extensão de lentidão hoje x média dos últimos 90 dias, na área ou numa via.", icon: ICONE_ESTRADA, unico: false },
+  situacao: { label: "Situação da cidade", desc: "Leitura única da operação (normal, atenção ou crítico) e os indicadores que explicam o estado.", icon: ICONS.dashboard, unico: true },
+  prioridades: { label: "Prioridades agora", desc: "O que pede ação primeiro, cruzando alertas, trânsito e chuva.", icon: ICONS.alertTriangle, unico: false },
   notificacoes: { label: "Notificações", desc: "Feed do dia: alarmes que abriram e dispositivos que deixaram de comunicar.", icon: ICONS.bell, unico: false },
 };
 
@@ -121,6 +123,10 @@ function defaultConfig(type) {
     case "waze":
       // apresentação do futuro: dados ilustrativos, sem configuração
       return { titulo: "", cor: "azul", modo: "lista", filtros: {} };
+    case "situacao":
+    case "prioridades":
+      // visão executiva: sem configuração. modo "totais" fixo para redesenhar a cada tick do LiveState
+      return { titulo: "", cor: "azul", modo: "totais", filtros: {} };
     case "notificacoes":
       // só lista (modo fixo "lista"); Fase 3: nome e filtro por tipo de dispositivo por instância, sem cor
       return { titulo: "", cor: "azul", modo: "lista", filtros: { tipos: CATEGORIAS_EQUIPAMENTO.map((c) => c.id) } };
@@ -139,6 +145,8 @@ function defaultSize(type) {
     case "pluviometro": return { w: 3, h: 5 };
     case "waze": return { w: 3, h: 7 };
     case "lentidao": return { w: 4, h: 5 };
+    case "situacao": return { w: 12, h: 2 };
+    case "prioridades": return { w: 4, h: 6 };
   }
 }
 
@@ -330,7 +338,7 @@ function initGrid() {
     // nunca salvou nada neste navegador: abre a Tela inicial. Quem limpar a tela depois cai
     // na tela vazia normalmente (aí o layout salvo existe, só que vazio).
     showEmptyState(false);
-    montarWidgetsDoPreset(PRESETS.find((p) => p.id === (Versoes.atual === 2 ? "inicial-v2" : "inicial")));
+    montarWidgetsDoPreset(PRESETS.find((p) => p.id === (PRESET_DA_TELA[Cockpits.ativo().id] || (Versoes.atual === 2 ? "inicial-v2" : "inicial"))));
     saveLayout();
   } else if (saved.length === 0) {
     showEmptyState(true);
@@ -339,6 +347,21 @@ function initGrid() {
     showEmptyState(false);
     if (!grid.float) grid.compact(); // layout salvo com buracos (feito com posicionamento livre) é recompactado
   }
+  ajustarAlturaDaTela();
+  window.addEventListener("resize", ajustarAlturaDaTela);
+}
+
+// Telas prontas (cockpits.js): qual preset monta no primeiro acesso e em quantas linhas a tela se divide.
+// Nelas a altura da linha é calculada para o layout ocupar a altura toda da janela, sem rolagem (um monitor de
+// diretoria ou uma TV não rolam). Se o usuário empilhar widgets além dessas linhas, a rolagem volta normalmente.
+const PRESET_DA_TELA = { exec: "executiva", tv: "tv" };
+const LINHAS_DA_TELA = { exec: 10, tv: 12 };
+function ajustarAlturaDaTela() {
+  const linhas = LINHAS_DA_TELA[Cockpits.ativo().id];
+  if (!linhas || !grid) return;
+  const altura = $(".cockpit-canvas").clientHeight;
+  grid.cellHeight(Math.max(56, Math.floor(altura / linhas)));
+  if (typeof CockpitMap !== "undefined" && CockpitBus.mapaAtivo()) setTimeout(() => CockpitMap.invalidateSize(), 60);
 }
 
 /* ---------- regiões cadastradas x filtros já salvos ---------- */
@@ -566,6 +589,35 @@ const PRESETS = [
     ],
   },
   {
+    // Tela "Visão executiva" (cockpits.js, id "exec"): monitor de quem dirige a operação. Cabe em 10 linhas, sem rolagem.
+    id: "executiva",
+    nome: "Visão executiva",
+    descricao: "Situação da cidade em cima; embaixo, o mapa, as prioridades do momento, a lentidão e os totais de alertas. Feita para caber no monitor sem rolar.",
+    widgets: [
+      { type: "situacao", x: 0, y: 0, w: 12, h: 2 },
+      { type: "mapa", x: 0, y: 2, w: 5, h: 8, config: { filtros: { camadas: { subareas: true, corredores: true, controladores: true } } } },
+      { type: "prioridades", x: 5, y: 2, w: 3, h: 8 },
+      { type: "lentidao", x: 8, y: 2, w: 4, h: 4 },
+      { type: "alertas", x: 8, y: 6, w: 4, h: 4 },
+    ],
+  },
+  {
+    // Tela "Painel TV" (cockpits.js, id "tv"): videowall da sala, 12 linhas que ocupam a altura toda da tela.
+    id: "tv",
+    nome: "Painel TV",
+    descricao: "Para a TV da sala de operação: situação da cidade, mapa grande, prioridades, câmeras, trânsito, chuva e alertas, tudo de uma vez e sem rolagem.",
+    widgets: [
+      { type: "situacao", x: 0, y: 0, w: 12, h: 2 },
+      { type: "prioridades", x: 0, y: 2, w: 3, h: 6 },
+      { type: "alertas", x: 0, y: 8, w: 3, h: 4 },
+      { type: "mapa", x: 3, y: 2, w: 5, h: 6, config: { filtros: { camadas: { subareas: true, corredores: true, controladores: true } } } },
+      { type: "lentidao", x: 3, y: 8, w: 5, h: 4 },
+      { type: "cameras", x: 8, y: 2, w: 4, h: 5 },
+      { type: "waze", x: 8, y: 7, w: 2, h: 5 },
+      { type: "pluviometro", x: 10, y: 7, w: 2, h: 5 },
+    ],
+  },
+  {
     id: "geral",
     nome: "Visão geral",
     descricao: "Faixa de totais em cima (alertas, dispositivos, regiões) e o mapa em largura total embaixo.",
@@ -700,6 +752,7 @@ function observarTamanho(el, id) {
     const inst = instances.find((i) => i.id === id);
     const body = document.querySelector(`#widgetBody-${id}`);
     if (inst && body && inst.type === "regioes" && inst.config.modo !== "totais") ajustarLinhasPorPagina(inst, body);
+    if (inst && body && inst.type === "prioridades") prioridadesAjustar(body);
   });
   ro.observe(el);
 }
@@ -718,7 +771,7 @@ function widgetMarkup(inst) {
     <div class="widget-card" data-type="${inst.type}" data-size="md" style="--accent:${cor}; --accent-tint:${cor}1a;">
       ${cabecalhoFigmaMarkup(inst, titulo, {
         config: false, // cockpit-futuro: botão de configuração removido de todos os cabeçalhos (12/11/2026)
-        extra: !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao"].includes(inst.type) ? modoToggleMarkup(inst) : "",
+        extra: !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao", "situacao", "prioridades"].includes(inst.type) ? modoToggleMarkup(inst) : "",
       })}
       <div class="widget-body" id="widgetBody-${inst.id}"></div>
     </div>`;
@@ -774,6 +827,8 @@ function renderWidgetBody(id) {
   if (inst.type === "pluviometro") { body.innerHTML = pluviometroMarkup(); return; }
   if (inst.type === "waze") { body.innerHTML = wazeMarkup(); return; }
   if (inst.type === "lentidao") { body.innerHTML = lentidaoMarkup(inst); return; }
+  if (inst.type === "situacao") { body.innerHTML = situacaoMarkup(); return; }
+  if (inst.type === "prioridades") { body.innerHTML = prioridadesMarkup(inst); prioridadesAjustar(body); return; }
   if (inst.type === "notificacoes") {
     fecharMenuNotificacao(); // o feed se redesenha a cada evento novo: um menu aberto ficaria apontando para a linha errada
     body.innerHTML = notificacoesMarkup(inst);

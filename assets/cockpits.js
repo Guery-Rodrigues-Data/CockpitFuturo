@@ -15,20 +15,46 @@ const Cockpits = (function () {
   const NOME_PADRAO = "Meu cockpit";
   const NOME_MAX = 40;
 
+  // Telas prontas da apresentação do Cockpit futuro (13/11/2026): além de "Meu cockpit", a lista já nasce com uma tela
+  // para o monitor de quem dirige a operação e outra para a TV da sala. O conteúdo de cada uma vem do preset de
+  // mesmo papel em app.js (PRESETS "executiva" e "tv"), montado no primeiro acesso da tela.
+  // `?tela=exec` ou `?tela=tv` no endereço abre direto nela (serve para deixar a TV apontada para o link).
+  const TELAS_PRONTAS = [
+    { id: "exec", nome: "Visão executiva" },
+    { id: "tv", nome: "Painel TV" },
+  ];
+
   function ler() {
+    let estado = null;
     try {
       const salvo = JSON.parse(localStorage.getItem(CHAVE_LISTA) || "null");
-      if (salvo && Array.isArray(salvo.itens) && salvo.itens.length) {
-        if (!salvo.itens.some((c) => c.id === salvo.ativo)) salvo.ativo = salvo.itens[0].id;
-        return salvo;
-      }
+      if (salvo && Array.isArray(salvo.itens) && salvo.itens.length) estado = salvo;
     } catch (e) { /* sem localStorage ou JSON ruim: cai no padrão */ }
-    return { ativo: "c1", itens: [{ id: "c1", nome: NOME_PADRAO }] };
+    if (!estado) estado = { ativo: "c1", itens: [{ id: "c1", nome: NOME_PADRAO }] };
+    // as telas prontas entram uma vez só: quem excluir uma delas não a vê voltar
+    if (!estado.telasProntas) {
+      TELAS_PRONTAS.forEach((t) => { if (!estado.itens.some((c) => c.id === t.id)) estado.itens.push({ ...t }); });
+      estado.telasProntas = true;
+    }
+    const pedida = new URLSearchParams(location.search).get("tela");
+    if (pedida && estado.itens.some((c) => c.id === pedida)) estado.ativo = pedida;
+    if (!estado.itens.some((c) => c.id === estado.ativo)) estado.ativo = estado.itens[0].id;
+    return estado;
   }
   let estado = ler();
+  // marca a tela no <html> para o CSS (tema da TV, acabamento da visão executiva)
+  document.documentElement.dataset.tela = estado.ativo;
 
   function gravar() {
     try { localStorage.setItem(CHAVE_LISTA, JSON.stringify(estado)); } catch (e) { /* segue na memória */ }
+  }
+  gravar();
+  // troca de tela recarrega a página: sem o ?tela= no endereço, senão a tela pedida voltaria sempre
+  function recarregar() {
+    const url = new URL(location.href);
+    url.searchParams.delete("tela");
+    if (url.toString() === location.href) location.reload();
+    else location.replace(url.toString());
   }
 
   const itens = () => estado.itens.map((c) => ({ ...c }));
@@ -44,14 +70,14 @@ const Cockpits = (function () {
     estado.itens.push({ id, nome: limpo });
     estado.ativo = id;
     gravar();
-    location.reload(); // o layout do novo cockpit nasce vazio/padrão: recarregar monta a tela do zero
+    recarregar(); // o layout do novo cockpit nasce vazio/padrão: recarregar monta a tela do zero
   }
 
   function trocar(id) {
     if (id === estado.ativo || !estado.itens.some((c) => c.id === id)) return;
     estado.ativo = id;
     gravar();
-    location.reload();
+    recarregar();
   }
 
   function renomear(id, nome) {
@@ -69,7 +95,7 @@ const Cockpits = (function () {
     try { localStorage.removeItem(id === "c1" ? Versoes.chaveLayout("cockpitLayoutV1") : `${Versoes.chaveLayout("cockpitLayoutV1")}-${id}`); } catch (e) { /* ok */ }
     if (estado.ativo === id) estado.ativo = estado.itens[0].id;
     gravar();
-    location.reload();
+    recarregar();
   }
 
   /* ---------- seletor no breadcrumb ---------- */

@@ -1,0 +1,231 @@
+/* =====================================================================
+   Cockpit futuro: visão executiva (widgets Situação da cidade e Prioridades agora)
+   e os dois acabamentos de tela: html[data-tela="exec"] (monitor) e html[data-tela="tv"] (TV, tema escuro).
+   Os widgets novos usam só tokens (--ex-*), então trocam de tema sozinhos.
+   ===================================================================== */
+
+:root {
+  --ex-card: #ffffff;
+  --ex-sub: #f4f5f7;
+  --ex-linha: #e6e9ed;
+  --ex-tinta: #1d2126;
+  --ex-tinta-2: #5d6570;
+  --ex-tinta-3: #8b929c;
+  --ex-ok: #1f9d5c;
+  --ex-ok-fundo: #e8f6ef;
+  --ex-atencao: #d98a0b;
+  --ex-atencao-fundo: #fff1dc;
+  --ex-critico: #d93630;
+  --ex-critico-fundo: #fde6e4;
+  --ex-azul: #347cb9;
+  --ex-azul-fundo: #e4f0fa;
+}
+
+[data-estado="ok"] { --est: var(--ex-ok); --est-fundo: var(--ex-ok-fundo); }
+[data-estado="atencao"] { --est: var(--ex-atencao); --est-fundo: var(--ex-atencao-fundo); }
+[data-estado="critico"] { --est: var(--ex-critico); --est-fundo: var(--ex-critico-fundo); }
+
+/* ---------- Situação da cidade ---------- */
+
+/* faixa sem cabeçalho fixo: o título é a própria leitura. O cabeçalho (arrastar / remover) aparece ao passar o mouse. */
+.widget-card[data-type="situacao"] { position: relative; }
+.widget-card[data-type="situacao"] .widget-header {
+  position: absolute; top: 6px; right: 6px; z-index: 2; min-height: 0; padding: 4px 6px; gap: 4px;
+  border: 0; border-radius: 6px; background: var(--ex-card); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+  opacity: 0; transition: opacity 0.15s ease;
+}
+.widget-card[data-type="situacao"]:hover .widget-header,
+.widget-card[data-type="situacao"] .widget-header:focus-within { opacity: 1; }
+.widget-card[data-type="situacao"] .widget-title { display: none; }
+.widget-card[data-type="situacao"] .widget-body,
+.widget-card[data-type="prioridades"] .widget-body { padding: 0; overflow: hidden; }
+
+.sit {
+  container-type: size;
+  display: flex; height: 100%; font-family: "Roboto", var(--font-body); color: var(--ex-tinta); background: var(--ex-card);
+}
+.sit-geral {
+  flex: 0 0 clamp(250px, 24%, 420px); display: flex; flex-direction: column; justify-content: center; gap: 6px;
+  padding: 14px 20px; background: var(--est-fundo); border-left: 6px solid var(--est);
+}
+.sit-selo {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--est);
+}
+.sit-selo i { width: 8px; height: 8px; border-radius: 50%; background: var(--est); box-shadow: 0 0 0 4px color-mix(in srgb, var(--est) 22%, transparent); }
+.sit-titulo { font-family: var(--font-display); font-size: 24px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
+.sit-frase { margin: 0; font-size: 13px; line-height: 1.4; color: var(--ex-tinta-2); }
+.sit-hora { font-size: 11px; color: var(--ex-tinta-3); }
+
+.sit-kpis { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.sit-kpi {
+  display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0;
+  padding: 12px 18px; border-left: 1px solid var(--ex-linha);
+}
+.sit-kpi-rotulo { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; line-height: 1.25; color: var(--ex-tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sit-kpi-rotulo i { flex: none; width: 8px; height: 8px; border-radius: 2px; background: var(--est); }
+.sit-kpi strong {
+  font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1.05; letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.sit-kpi[data-estado="atencao"] strong, .sit-kpi[data-estado="critico"] strong { color: var(--est); }
+.sit-kpi strong small { margin-left: 3px; font-family: "Roboto", var(--font-body); font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--ex-tinta-3); }
+.sit-kpi-barra { position: relative; height: 5px; border-radius: 3px; background: var(--ex-sub); }
+.sit-kpi-barra.is-vazia { visibility: hidden; } /* guarda o lugar: os números de todos os indicadores ficam na mesma linha */
+.sit-kpi-barra i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--est); }
+.sit-kpi-barra b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ex-tinta-2); }
+.sit-kpi-pe { font-size: 11.5px; line-height: 1.3; color: var(--ex-tinta-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* card baixo: sai o que é complemento */
+@container (max-height: 150px) {
+  .sit-frase { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sit-hora { display: none; }
+  .sit-titulo { font-size: 20px; }
+  .sit-kpi strong { font-size: 30px; }
+}
+@container (max-height: 105px) {
+  .sit-frase, .sit-kpi-barra { display: none; }
+}
+/* card estreito: a leitura geral vai para cima e os indicadores quebram em linhas */
+@container (max-width: 900px) {
+  .sit { flex-direction: column; overflow: auto; }
+  .sit-geral { flex: none; border-left: 0; border-top: 6px solid var(--est); }
+  .sit-kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .sit-kpi { border-left: 0; border-top: 1px solid var(--ex-linha); }
+}
+
+/* ---------- Prioridades agora ---------- */
+
+.pri { display: flex; flex-direction: column; height: 100%; padding: 12px 12px 10px; gap: 10px; font-family: "Roboto", var(--font-body); color: var(--ex-tinta); }
+.pri-head { display: flex; align-items: baseline; gap: 8px; padding: 0 4px; font-size: 11.5px; color: var(--ex-tinta-3); }
+.pri-head span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pri-head em { font-style: normal; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pri-lista { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.pri-vazio { margin: auto; font-size: 13px; color: var(--ex-tinta-3); }
+
+.pri-item {
+  --tom: var(--ex-tinta-3);
+  flex: none; display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 9px 10px 9px 8px;
+  border: 0; border-left: 3px solid var(--tom); border-radius: 6px; background: var(--ex-sub);
+  font-family: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.pri-item[hidden] { display: none; }
+.pri-item:not([data-action]):not([data-fut]) { cursor: default; }
+.pri-item:hover { background: color-mix(in srgb, var(--tom) 10%, var(--ex-sub)); }
+.pri-item[data-tom="critico"] { --tom: var(--ex-critico); }
+.pri-item[data-tom="alto"] { --tom: var(--ex-atencao); }
+.pri-item[data-tom="offline"] { --tom: var(--ex-tinta-2); }
+.pri-item[data-tom="medio"] { --tom: var(--ex-azul); }
+.pri-ordem {
+  flex: none; width: 22px; padding-top: 1px; font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.1;
+  text-align: center; color: var(--tom); font-variant-numeric: tabular-nums;
+}
+.pri-corpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pri-topo { display: flex; align-items: baseline; gap: 8px; }
+.pri-topo b { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pri-topo em { flex: none; font-style: normal; font-size: 10.5px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ex-tinta-3); }
+.pri-motivo { font-size: 12px; line-height: 1.35; color: var(--ex-tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pri-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.pri-tags i {
+  font-style: normal; font-size: 10.5px; font-weight: 600; line-height: 1; padding: 4px 7px; border-radius: 4px;
+  color: var(--tom); background: color-mix(in srgb, var(--tom) 14%, transparent);
+}
+.pri-tags i[data-t="via"] { color: var(--ex-atencao); background: color-mix(in srgb, var(--ex-atencao) 16%, transparent); }
+.pri-tags i[data-t="chuva"] { color: var(--ex-azul); background: color-mix(in srgb, var(--ex-azul) 16%, transparent); }
+
+/* ---------- Tela "Visão executiva" (monitor) ---------- */
+
+html[data-tela="exec"] body { background: #eceef1; }
+html[data-tela="exec"] .widget-card,
+html[data-tela="tv"] .widget-card { border-radius: 12px; }
+html[data-tela="exec"] .widget-card { box-shadow: 0 1px 2px rgba(20, 24, 31, 0.06), 0 8px 24px rgba(20, 24, 31, 0.07); }
+/* telas prontas ocupam a altura toda: sem barra de rolagem aparecendo por 1 px de arredondamento */
+html[data-tela="exec"] .cockpit-canvas,
+html[data-tela="tv"] .cockpit-canvas { scrollbar-width: none; }
+
+/* ---------- Tela "Painel TV": tema escuro, lida de longe ---------- */
+
+html[data-tela="tv"] {
+  color-scheme: dark;
+  --bg: #07080a;
+  --surface: #111316;
+  --surface-sunken: #191c20;
+  --ink: #eef1f4;
+  --ink-muted: #a3acb8;
+  --ink-faint: #76808d;
+  --border: #23272d;
+  --border-strong: #30363e;
+  --shadow-sm: none;
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.5);
+
+  --ex-card: #111316;
+  --ex-sub: #1a1d21;
+  --ex-linha: #24282e;
+  --ex-tinta: #f1f3f5;
+  --ex-tinta-2: #aab2bd;
+  --ex-tinta-3: #7a8490;
+  --ex-ok: #35c27c;
+  --ex-ok-fundo: #10231a;
+  --ex-atencao: #f2a93b;
+  --ex-atencao-fundo: #2a1f0d;
+  --ex-critico: #ff5a52;
+  --ex-critico-fundo: #2e1413;
+  --ex-azul: #5aa9e6;
+  --ex-azul-fundo: #10202d;
+}
+html[data-tela="tv"] body { background: var(--bg); }
+
+/* barra de cima: fina, escura, com data e hora */
+html[data-tela="tv"] .app-topbar-wrap { background: transparent; padding: 0; top: 10px; }
+html[data-tela="tv"] .app-topbar { --header-h: 52px; height: 52px; background: #111316; box-shadow: inset 0 0 0 1px #1d2126; }
+html[data-tela="tv"] .app-topbar-logo svg { filter: brightness(0) invert(1); }
+html[data-tela="tv"] .topbar-icon-btn { color: #c9d0d8; }
+html[data-tela="tv"] .topbar-icon-btn:hover,
+html[data-tela="tv"] .cockpit-sel-btn:hover { background: #1d2126; }
+html[data-tela="tv"] .cockpit-sel-btn { color: #eef1f4; }
+html[data-tela="tv"] .cockpit-canvas { top: 68px; }
+html[data-tela="tv"] .widget-library-wrap { opacity: 0; transition: opacity 0.2s ease; }
+html[data-tela="tv"] .widget-library-wrap:hover,
+html[data-tela="tv"] .widget-library-wrap:focus-within { opacity: 1; }
+
+.tv-relogio { display: flex; align-items: center; gap: 14px; margin-right: 12px; font-family: "Roboto", var(--font-body); color: #aab2bd; }
+.tv-relogio b { font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #f1f3f5; font-variant-numeric: tabular-nums; }
+.tv-data { font-size: 13px; }
+.tv-data::first-letter { text-transform: uppercase; }
+.tv-aovivo { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #35c27c; }
+.tv-aovivo i { width: 7px; height: 7px; border-radius: 50%; background: #35c27c; animation: tv-pulso 2s ease-in-out infinite; }
+@keyframes tv-pulso { 50% { opacity: 0.25; } }
+
+/* cards */
+html[data-tela="tv"] .widget-card { background: var(--ex-card); box-shadow: inset 0 0 0 1px #1d2126; }
+html[data-tela="tv"] .fig-head { border-bottom-color: #23272d; }
+html[data-tela="tv"] .fig-head .widget-title { color: #e4e8ec; font-size: 15px; }
+html[data-tela="tv"] .fig-head .fig-grip,
+html[data-tela="tv"] .fig-head .fig-btn { color: #76808d; opacity: 0; transition: opacity 0.15s ease; }
+html[data-tela="tv"] .widget-card:hover .fig-grip,
+html[data-tela="tv"] .widget-card:hover .fig-btn { opacity: 1; }
+
+html[data-tela="tv"] .modo-toggle { display: none; } /* TV não alterna Totais / Lista */
+
+/* widgets novos: maiores, para ler de longe */
+html[data-tela="tv"] .sit-titulo { font-size: 30px; }
+html[data-tela="tv"] .sit-frase { font-size: 14.5px; }
+html[data-tela="tv"] .sit-kpi-rotulo { font-size: 13.5px; }
+html[data-tela="tv"] .sit-kpi strong { font-size: 48px; }
+html[data-tela="tv"] .sit-kpi strong small { font-size: 17px; }
+html[data-tela="tv"] .sit-kpi-pe { font-size: 13px; }
+html[data-tela="tv"] .pri-topo b { font-size: 14.5px; }
+html[data-tela="tv"] .pri-motivo { font-size: 13px; }
+html[data-tela="tv"] .pri-ordem { font-size: 20px; }
+
+/* Widgets que vieram do Figma têm as cores claras escritas direto no CSS. Na TV o corpo deles é invertido
+   (claro vira escuro, o matiz das cores é mantido) e o contraste é reduzido para o preto ficar no tom dos cards.
+   Fotos das câmeras são desinvertidas. É um atalho de protótipo: no produto, cada widget teria os seus tokens. */
+html[data-tela="tv"] .widget-card:is([data-type="alertas"], [data-type="lentidao"], [data-type="waze"], [data-type="pluviometro"], [data-type="cameras"], [data-type="notificacoes"], [data-type="dispositivos"], [data-type="regioes"], [data-type="resumo"]) .widget-body {
+  filter: invert(1) hue-rotate(180deg) contrast(0.87);
+  background: #fff;
+}
+html[data-tela="tv"] .widget-card[data-type="cameras"] .widget-body img { filter: invert(1) hue-rotate(180deg) contrast(1.15); }
+/* mapa: só os ladrilhos escurecem; pinos, áreas e controles ficam com a cor de sempre */
+html[data-tela="tv"] .leaflet-container { background: #0c0d0f; }
+html[data-tela="tv"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6); }
