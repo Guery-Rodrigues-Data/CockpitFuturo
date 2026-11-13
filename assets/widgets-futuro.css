@@ -457,3 +457,8 @@ button.al-leg:hover { color: #32383f; }
 .wz img.wz-ico { display: block; width: 24px; height: auto; flex: none; }
 .wz-kpi img.wz-ico { width: 28px; }
 html[data-tema="escuro"] .wz img.wz-ico { filter: invert(1) hue-rotate(180deg); }
+
+/* Figma (Waze V2): o ícone fica na mesma linha do número, à esquerda, e não acima dele */
+.wz-kpi-num { display: flex; align-items: center; gap: 8px; }
+.wz-kpi img.wz-ico { width: 28px; }
+.wz-tipo img.wz-ico { width: 28px; }

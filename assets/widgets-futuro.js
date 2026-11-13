@@ -134,8 +134,8 @@ function wazeMarkup() {
     <div class="wz">
       <div class="wz-area">${WAZE_ICONES.pin}<b>${d.area}</b></div>
       <div class="wz-resumo">
-        <div class="wz-kpi" data-tom="alertas">${wazeImg("alertas")}<strong>${d.alertas}</strong><span>Alertas recebidos</span></div>
-        <div class="wz-kpi" data-tom="lentidao">${wazeImg("lentidao")}<strong>${d.lentidao}</strong><span>Trechos com lentidão</span></div>
+        <div class="wz-kpi" data-tom="alertas"><div class="wz-kpi-num">${wazeImg("alertas")}<strong>${d.alertas}</strong></div><span>Alertas recebidos</span></div>
+        <div class="wz-kpi" data-tom="lentidao"><div class="wz-kpi-num">${wazeImg("lentidao")}<strong>${d.lentidao}</strong></div><span>Trechos com lentidão</span></div>
       </div>
       <div class="wz-tipos">
         ${d.tipos.map((t) => `<div class="wz-tipo" data-tipo="${t.id}"><div class="wz-tipo-qtd">${wazeImg(t.id)}<strong>${t.n}</strong></div><span>${t.label}</span></div>`).join("")}
