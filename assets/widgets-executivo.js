@@ -26,6 +26,13 @@ const SIT_CORTES = {
   graves: { atencao: 1, critico: 3 }, // % dos semáforos com alerta Crítico ou Alto (a partir de)
   lentidao: { atencao: 10, critico: 30 }, // % acima da média de 90 dias (a partir de)
   foraDoNormal: { atencao: 1, critico: 10 }, // cruzamentos apagados ou em intermitente (a partir de)
+  acidentes: { atencao: 3, critico: 6 }, // acidentes informados pelo Waze (a partir de)
+  offlineOutros: { atencao: 10, critico: 30 }, // % dos dispositivos que não são semáforo sem comunicação (a partir de)
+};
+// como cada indicador é chamado no meio de uma frase
+const SIT_NOMES = {
+  comunicando: "semáforos online", graves: "alertas graves", foraDoNormal: "cruzamentos apagados ou piscando",
+  lentidao: "lentidão", chuva: "chuva", acidentes: "acidentes", offlineOutros: "outros dispositivos offline",
 };
 
 const sitNum = (n, casas = 0) => n.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
@@ -53,11 +60,17 @@ function situacaoIndicadores() {
   const apagados = semaforos.filter((e) => LiveState.statusDoControlador(e.id) === "apagado").length;
   const intermitentes = semaforos.filter((e) => LiveState.statusDoControlador(e.id) === "intermitente").length;
 
+  const tipoWaze = (id) => (WAZE_DEMO.tipos.find((t) => t.id === id) || { n: 0 }).n;
+  const acidentes = tipoWaze("acidente");
+  const outros = LiveState.getEquipamentos().filter((e) => e.tipo !== "semaforo");
+  const outrosOff = outros.filter((e) => !e.online).length;
+  const pctOutrosOff = outros.length ? (outrosOff / outros.length) * 100 : 0;
+
   const nivelChuva = { Normal: "ok", "Atenção": "atencao", Alerta: "critico" }[PLUVIO_DEMO.nivel] || "ok";
 
   return [
     {
-      id: "comunicando", rotulo: "Semáforos comunicando",
+      id: "comunicando", rotulo: "Semáforos online",
       valor: sitNum(pctOnline, 1), unidade: "%",
       pe: `${sitNum(online)} de ${sitNum(semaforos.length)} online`,
       medida: pctOnline, estado: sitAbaixo(pctOnline, SIT_CORTES.comunicando),
@@ -93,31 +106,133 @@ function situacaoIndicadores() {
       medida: null, estado: nivelChuva,
       motivo: `chuva em ${PLUVIO_DEMO.nivel.toLowerCase()}`,
     },
+    {
+      id: "acidentes", rotulo: "Acidentes no trânsito", ilustrativo: true,
+      valor: sitNum(acidentes), unidade: "",
+      pe: `${sitNum(tipoWaze("perigo"))} perigos · ${sitNum(tipoWaze("interdicao"))} interdições`,
+      medida: null, estado: sitAcima(acidentes, SIT_CORTES.acidentes),
+      motivo: acidentes === 1 ? "1 acidente informado pelo Waze" : `${sitNum(acidentes)} acidentes informados pelo Waze`,
+    },
+    {
+      id: "offlineOutros", rotulo: "Outros dispositivos offline",
+      valor: sitNum(outrosOff), unidade: "",
+      pe: `de ${sitNum(outros.length)} câmeras, radares e outros`,
+      medida: pctOutrosOff, estado: sitAcima(pctOutrosOff, SIT_CORTES.offlineOutros),
+      motivo: outrosOff === 1 ? "1 dispositivo de outro tipo sem comunicação" : `${sitNum(outrosOff)} dispositivos de outros tipos sem comunicação`,
+    },
   ];
 }
 
-function situacaoMarkup() {
-  const inds = situacaoIndicadores();
-  const pior = inds.reduce((p, i) => (SIT_ORDEM.indexOf(i.estado) > SIT_ORDEM.indexOf(p) ? i.estado : p), "ok");
-  const fora = inds.filter((i) => i.estado !== "ok").sort((a, b) => SIT_ORDEM.indexOf(b.estado) - SIT_ORDEM.indexOf(a.estado));
-  let frase = "Todos os indicadores dentro do esperado.";
-  if (fora.length) {
-    const citados = fora.slice(0, 2).map((i) => i.motivo);
-    const resto = fora.length - citados.length;
-    frase = `${fora.length} de ${inds.length} indicadores fora do normal: ${citados.join(resto > 0 ? ", " : " e ")}${resto > 0 ? ` e ${resto === 1 ? "outro" : `outros ${resto}`}` : ""}.`;
+/* ---------- Análise automática: o card inteiro conta a história do momento ----------
+   Em vez de cinco números fixos, o card escolhe os indicadores que mais importam agora (os fora do normal primeiro)
+   e conta o que está acontecendo em capítulos curtos: panorama, o mais urgente, trânsito, chuva, equipamentos.
+   Cada capítulo fica alguns segundos na tela e acende os indicadores de que está falando; os outros recuam.
+   Clicar num traço do progresso ou num indicador pula para o capítulo dele; o mouse em cima pausa.
+
+   SIMULAÇÃO: o texto é montado por regras a partir dos mesmos números dos indicadores e da lista de Prioridades.
+   Não há modelo de IA por trás. HIPÓTESE NÃO VALIDADA: se o produto teria uma análise assim, quem a escreve
+   (regras ou IA), quais indicadores entram no conjunto e como se decide o que "importa agora". */
+const SIT_VISIVEIS = 5; // quantos indicadores cabem na faixa
+const SIT_CAPITULO_S = 8; // tempo de cada capítulo na tela
+const SIT_ICONE_ANALISE = '<span class="sit-ia-icone" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';
+const sitUi = { cap: 0, prox: 0, virou: true };
+
+// os que importam agora: fora do normal primeiro (crítico antes de atenção); no empate vale a ordem do conjunto
+function situacaoVisiveis(todos) {
+  return todos.map((x, i) => ({ x, i }))
+    .sort((a, b) => SIT_ORDEM.indexOf(b.x.estado) - SIT_ORDEM.indexOf(a.x.estado) || a.i - b.i)
+    .slice(0, SIT_VISIVEIS).map((o) => o.x);
+}
+
+function situacaoCapitulos(inds, pior) {
+  const ind = (id) => inds.find((x) => x.id === id);
+  const fora = inds.filter((x) => x.estado !== "ok");
+  const foraDe = (ids) => ids.map(ind).filter((x) => x && x.estado !== "ok");
+  const maiuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const caps = [];
+
+  caps.push({
+    rotulo: "Panorama",
+    texto: fora.length
+      ? `<b>${fora.length} de ${inds.length}</b> indicadores em destaque estão fora do normal: ${fora.map((x) => SIT_NOMES[x.id]).join(", ").replace(/, ([^,]*)$/, " e $1")}.`
+      : "Todos os indicadores em destaque estão dentro do esperado.",
+    foco: (fora.length ? fora : inds).map((x) => x.id),
+  });
+
+  const topo = prioridadesLista().find((p) => p.tipo === "equipamento");
+  if (topo) caps.push({
+    rotulo: "Mais urgente",
+    texto: `<b>${topo.titulo}</b>: ${topo.motivo.split(" · ")[0].toLowerCase()}${topo.tags.some((t) => t.t === "via") ? ", numa via que já está lenta" : ""}. É o primeiro da lista de prioridades.`,
+    foco: [topo.tom === "offline" ? (topo.fonte === "Controladores" ? "comunicando" : "offlineOutros") : "graves"].filter(ind),
+    acao: topo,
+  });
+
+  const transito = foraDe(["lentidao", "acidentes"]);
+  if (transito.length) {
+    const via = [...WAZE_DEMO.trechos].sort((a, b) => b.atraso - a.atraso)[0];
+    const partes = [];
+    if (transito.some((x) => x.id === "lentidao")) partes.push(`o trânsito está <b>${ind("lentidao").pe.replace("+", "").replace(" sobre a média de 90 dias", "")} acima da média</b>, puxado pela ${via.via} (+${via.atraso} min)`);
+    if (transito.some((x) => x.id === "acidentes")) partes.push(`o Waze informa <b>${ind("acidentes").valor} acidentes</b> na área`);
+    caps.push({ rotulo: "Trânsito", texto: maiuscula(partes.join(" e ")) + ".", foco: transito.map((x) => x.id) });
   }
-  const agora = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  if (foraDe(["chuva"]).length) caps.push({
+    rotulo: "Chuva",
+    texto: `Chove em <b>nível de ${PLUVIO_DEMO.nivel.toLowerCase()}</b> na estação ${PLUVIO_DEMO.estacao}: ${sitNum(PLUVIO_DEMO.acumulado24h, 1)} mm em 24 h e ${sitNum(PLUVIO_DEMO.intensidade, 1)} mm/h agora.`,
+    foco: ["chuva"],
+  });
+
+  const equip = foraDe(["comunicando", "foraDoNormal", "offlineOutros"]);
+  if (equip.length) caps.push({
+    rotulo: "Equipamentos",
+    texto: `${maiuscula(equip.map((x) => `<b>${x.motivo}</b>`).join(" e "))}${ind("comunicando") && ind("comunicando").estado === "ok" ? `. A rede semafórica segue estável, com ${ind("comunicando").valor}% online` : ""}.`,
+    foco: equip.map((x) => x.id),
+  });
+  else if (ind("comunicando")) caps.push({
+    rotulo: "O que segue normal",
+    texto: `A rede semafórica segue estável: <b>${ind("comunicando").valor}%</b> dos semáforos online.`,
+    foco: ["comunicando"],
+  });
+
+  return caps;
+}
+
+// Texto novo entra palavra por palavra (cada palavra é um <span> com atraso crescente). As tags <b> são preservadas.
+function sitPalavras(html) {
+  let n = 0;
+  return html.split(/(<\/?b>)/).map((parte) => (parte === "<b>" || parte === "</b>" ? parte
+    : parte.split(/(\s+)/).map((w) => (w.trim() ? `<span style="animation-delay:${(n++ * 22)}ms">${w}</span>` : w)).join(""))).join("");
+}
+
+function situacaoMarkup(inst) {
+  const inds = situacaoVisiveis(situacaoIndicadores());
+  const pior = inds.reduce((p, i) => (SIT_ORDEM.indexOf(i.estado) > SIT_ORDEM.indexOf(p) ? i.estado : p), "ok");
+  const caps = situacaoCapitulos(inds, pior);
+  const agora = Date.now();
+  if (!sitUi.prox) sitUi.prox = agora + SIT_CAPITULO_S * 1000;
+  sitUi.cap = ((sitUi.cap % caps.length) + caps.length) % caps.length;
+  const cap = caps[sitUi.cap];
+  const virou = sitUi.virou;
+  sitUi.virou = false;
+  // o progresso continua de onde estava quando o card é redesenhado pelo tick do LiveState
+  const decorrido = Math.min(SIT_CAPITULO_S, Math.max(0, SIT_CAPITULO_S - (sitUi.prox - agora) / 1000));
+  const acao = cap.acao && inst
+    ? `<button type="button" class="sit-acao" data-action="lista-row" data-id="${inst.id}" data-tipo="equipamento" data-alvo="${cap.acao.alvo}" title="Ver no mapa"><span>Ver no mapa</span><i aria-hidden="true">→</i></button>`
+    : "";
   return `
-    <div class="sit" data-estado="${pior}">
+    <div class="sit${virou ? " is-virou" : ""}" data-estado="${pior}">
       <div class="sit-geral">
-        <span class="sit-selo"><i></i>${SIT_ESTADOS[pior].rotulo}</span>
-        <b class="sit-titulo">${SIT_ESTADOS[pior].titulo}</b>
-        <p class="sit-frase">${frase}</p>
-        <span class="sit-hora">Atualizado às ${agora} · lentidão e chuva são dados ilustrativos</span>
+        <div class="sit-ia" title="Resumo montado automaticamente a partir dos indicadores e das prioridades desta tela (simulação)">
+          ${SIT_ICONE_ANALISE}<span>Análise automática</span>
+          <span class="sit-caps">${caps.map((c, i) => `<button type="button" class="sit-cap${i < sitUi.cap ? " is-feito" : i === sitUi.cap ? " is-atual" : ""}" data-fut="sit-ir" data-i="${i}" title="${c.rotulo}" aria-label="${c.rotulo}"><i${i === sitUi.cap ? ` style="animation-duration:${SIT_CAPITULO_S}s;animation-delay:-${decorrido.toFixed(2)}s"` : ""}></i></button>`).join("")}</span>
+          ${acao}
+        </div>
+        <div class="sit-titulo-linha"><b class="sit-titulo">${SIT_ESTADOS[pior].titulo}</b><span class="sit-selo"><i></i>${SIT_ESTADOS[pior].rotulo}</span></div>
+        <p class="sit-frase"><em>${cap.rotulo}</em>${virou ? sitPalavras(cap.texto) : cap.texto}</p>
       </div>
       <div class="sit-kpis">
         ${inds.map((i) => `
-        <div class="sit-kpi" data-estado="${i.estado}" title="${SIT_ESTADOS[i.estado].rotulo}">
+        <div class="sit-kpi ${cap.foco.includes(i.id) ? "is-foco" : "is-fundo"}" data-estado="${i.estado}" data-fut="sit-kpi" data-ind="${i.id}" title="${SIT_ESTADOS[i.estado].rotulo}${i.ilustrativo ? " · dado ilustrativo" : ""}">
           <span class="sit-kpi-rotulo"><i></i>${i.rotulo}</span>
           <strong>${i.valor}${i.unidade ? `<small>${i.unidade}</small>` : ""}</strong>
           ${i.medida === null ? `<span class="sit-kpi-barra is-vazia"></span>` : `<span class="sit-kpi-barra"><i style="width:${i.medida.toFixed(1)}%"></i>${i.marca ? `<b style="left:${i.marca.toFixed(1)}%" title="Média de 90 dias"></b>` : ""}</span>`}
@@ -126,6 +241,31 @@ function situacaoMarkup() {
       </div>
     </div>`;
 }
+
+function situacaoIr(cap) {
+  sitUi.cap = cap;
+  sitUi.prox = Date.now() + SIT_CAPITULO_S * 1000;
+  sitUi.virou = true;
+  instances.filter((i) => i.type === "situacao").forEach((i) => renderWidgetBody(i.id));
+}
+// passa de capítulo sozinho; com o mouse em cima do card, espera
+setInterval(() => {
+  const el = document.querySelector(".sit");
+  if (!el || !sitUi.prox) return;
+  if (el.matches(":hover")) { sitUi.prox += 500; return; }
+  if (Date.now() >= sitUi.prox) situacaoIr(sitUi.cap + 1);
+}, 500);
+document.addEventListener("click", (ev) => {
+  const el = ev.target.closest('[data-fut^="sit-"]');
+  if (!el) return;
+  if (el.dataset.fut === "sit-ir") return situacaoIr(Number(el.dataset.i));
+  // clique num indicador: vai para o capítulo que fala dele (o panorama só se nenhum outro falar)
+  const inds = situacaoVisiveis(situacaoIndicadores());
+  const pior = inds.reduce((p, i) => (SIT_ORDEM.indexOf(i.estado) > SIT_ORDEM.indexOf(p) ? i.estado : p), "ok");
+  const caps = situacaoCapitulos(inds, pior);
+  const alvo = caps.findIndex((c, i) => i > 0 && c.foco.includes(el.dataset.ind));
+  situacaoIr(alvo > 0 ? alvo : 0);
+});
 
 /* ---------- Prioridades agora ---------- */
 

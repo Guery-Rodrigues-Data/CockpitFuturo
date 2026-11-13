@@ -827,7 +827,7 @@ function renderWidgetBody(id) {
   if (inst.type === "pluviometro") { body.innerHTML = pluviometroMarkup(); return; }
   if (inst.type === "waze") { body.innerHTML = wazeMarkup(); return; }
   if (inst.type === "lentidao") { body.innerHTML = lentidaoMarkup(inst); return; }
-  if (inst.type === "situacao") { body.innerHTML = situacaoMarkup(); return; }
+  if (inst.type === "situacao") { body.innerHTML = situacaoMarkup(inst); return; }
   if (inst.type === "prioridades") { body.innerHTML = prioridadesMarkup(inst); prioridadesAjustar(body); return; }
   if (inst.type === "notificacoes") {
     fecharMenuNotificacao(); // o feed se redesenha a cada evento novo: um menu aberto ficaria apontando para a linha errada

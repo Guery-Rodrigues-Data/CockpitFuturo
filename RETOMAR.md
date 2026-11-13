@@ -37,6 +37,12 @@ da cidade nem cruzava as fontes. Entraram dois widgets e duas telas prontas.
 - **Situação da cidade** (`assets/widgets-executivo.js/.css`): estado geral (normal / atenção / crítico) + 5
   indicadores. Semáforos comunicando, alertas críticos e altos e cruzamentos apagados ou piscando vêm do LiveState;
   lentidão e chuva são ilustrativos. O cabeçalho do card só aparece ao passar o mouse.
+- **Análise automática no card Situação da cidade** (13/11, ideia do Guery): o card inteiro conta a história do
+  momento. De um conjunto de 7 indicadores ele mostra os 5 que mais importam agora (fora do normal primeiro) e passa
+  capítulos curtos de 8 s (Panorama, Mais urgente, Trânsito, Chuva, Equipamentos); o capítulo da vez acende os
+  indicadores de que fala e os outros recuam. Traços de progresso e indicadores são clicáveis; o mouse em cima pausa.
+  É SIMULAÇÃO: texto montado por regras em `situacaoCapitulos` (widgets-executivo.js), sem IA por trás. Pendência se
+  virar história: quem escreve a análise (regras ou IA), quais indicadores entram e o que é "importar agora".
 - **Prioridades agora**: lista única que cruza alertas dos dispositivos, trânsito (Waze) e chuva, em ordem de
   gravidade; dispositivo em via com lentidão sobe na lista. Clique leva ao mapa.
 - **Telas prontas** em `cockpits.js`: "Visão executiva" (id `exec`, monitor, 10 linhas) e "Painel TV" (id `tv`,
