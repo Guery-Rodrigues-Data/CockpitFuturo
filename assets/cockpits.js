@@ -45,6 +45,26 @@ const Cockpits = (function () {
   // marca a tela no <html> para o CSS (tema da TV, acabamento da visão executiva)
   document.documentElement.dataset.tela = estado.ativo;
 
+  // Tema (claro / escuro): escolha de quem usa, guardada por tela neste navegador. O padrão é claro em todas.
+  // `?tema=escuro` ou `?tema=claro` no endereço também escolhe (serve para o link da TV já abrir no tema certo).
+  // HIPÓTESE NÃO VALIDADA: no produto a preferência seria do perfil do usuário, não do navegador.
+  const chaveTema = () => `cockpitTema-${estado.ativo}`;
+  function lerTema() {
+    const pedido = new URLSearchParams(location.search).get("tema");
+    if (pedido === "escuro" || pedido === "claro") {
+      try { localStorage.setItem(chaveTema(), pedido); } catch (e) { /* vale só nesta carga */ }
+      return pedido;
+    }
+    try { return localStorage.getItem(chaveTema()) === "escuro" ? "escuro" : "claro"; } catch (e) { return "claro"; }
+  }
+  document.documentElement.dataset.tema = lerTema();
+  function alternarTema() {
+    const novo = document.documentElement.dataset.tema === "escuro" ? "claro" : "escuro";
+    document.documentElement.dataset.tema = novo;
+    try { localStorage.setItem(chaveTema(), novo); } catch (e) { /* segue na memória */ }
+    return novo;
+  }
+
   function gravar() {
     try { localStorage.setItem(CHAVE_LISTA, JSON.stringify(estado)); } catch (e) { /* segue na memória */ }
   }
@@ -53,6 +73,7 @@ const Cockpits = (function () {
   function recarregar() {
     const url = new URL(location.href);
     url.searchParams.delete("tela");
+    url.searchParams.delete("tema");
     if (url.toString() === location.href) location.reload();
     else location.replace(url.toString());
   }
@@ -185,5 +206,5 @@ const Cockpits = (function () {
 
   document.addEventListener("DOMContentLoaded", montarSeletor);
 
-  return { ativo, itens, chaveLayout };
+  return { ativo, itens, chaveLayout, alternarTema };
 })();

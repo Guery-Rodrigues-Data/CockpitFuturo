@@ -39,10 +39,12 @@ da cidade nem cruzava as fontes. Entraram dois widgets e duas telas prontas.
   lentidão e chuva são ilustrativos. O cabeçalho do card só aparece ao passar o mouse.
 - **Prioridades agora**: lista única que cruza alertas dos dispositivos, trânsito (Waze) e chuva, em ordem de
   gravidade; dispositivo em via com lentidão sobe na lista. Clique leva ao mapa.
-- **Telas prontas** em `cockpits.js`: "Visão executiva" (id `exec`, monitor, 10 linhas) e "Painel TV" (id `tv`, tema
-  escuro, 12 linhas, relógio na barra). As duas ocupam a altura toda da janela, sem rolagem (`ajustarAlturaDaTela`
+- **Telas prontas** em `cockpits.js`: "Visão executiva" (id `exec`, monitor, 10 linhas) e "Painel TV" (id `tv`,
+  12 linhas, relógio na barra). As duas ocupam a altura toda da janela, sem rolagem (`ajustarAlturaDaTela`
   em app.js). Abrem pelo seletor de cockpits ou direto por `?tela=exec` / `?tela=tv`. TV 4K: usar o zoom do navegador.
-- Tema escuro da TV: widgets novos usam tokens; os que vieram do Figma são invertidos por filtro CSS (atalho de
+- **Tema escuro é opcional** (pedido do Guery): botão sol/lua na barra de cima, em qualquer tela; o padrão é claro
+  e a escolha fica guardada por tela no navegador. `?tema=escuro` no endereço também liga (ex.: `?tela=tv&tema=escuro`).
+- No tema escuro, os widgets novos usam tokens; os que vieram do Figma são invertidos por filtro CSS (atalho de
   protótipo, comentado no fim de `widgets-executivo.css`).
 - Conferido por captura de tela (Chrome headless) em 1920x1080 e 1366x768; a tela "Meu cockpit" não mudou.
 

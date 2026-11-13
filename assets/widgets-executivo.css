@@ -1,6 +1,7 @@
 /* =====================================================================
    Cockpit futuro: visão executiva (widgets Situação da cidade e Prioridades agora)
-   e os dois acabamentos de tela: html[data-tela="exec"] (monitor) e html[data-tela="tv"] (TV, tema escuro).
+   os dois acabamentos de tela, html[data-tela="exec"] (monitor) e html[data-tela="tv"] (TV), e o tema escuro
+   opcional, html[data-tema="escuro"].
    Os widgets novos usam só tokens (--ex-*), então trocam de tema sozinhos.
    ===================================================================== */
 
@@ -143,9 +144,48 @@ html[data-tela="exec"] .widget-card { box-shadow: 0 1px 2px rgba(20, 24, 31, 0.0
 html[data-tela="exec"] .cockpit-canvas,
 html[data-tela="tv"] .cockpit-canvas { scrollbar-width: none; }
 
-/* ---------- Tela "Painel TV": tema escuro, lida de longe ---------- */
+/* ---------- Tela "Painel TV": barra fina com data e hora, textos maiores para ler de longe ----------
+   (só o formato; as cores vêm do tema, logo abaixo) */
 
-html[data-tela="tv"] {
+html[data-tela="tv"] .app-topbar-wrap { padding: 0; top: 10px; }
+html[data-tela="tv"] .app-topbar { --header-h: 52px; height: 52px; }
+html[data-tela="tv"] .cockpit-canvas { top: 68px; }
+html[data-tela="tv"] .widget-library-wrap { opacity: 0; transition: opacity 0.2s ease; }
+html[data-tela="tv"] .widget-library-wrap:hover,
+html[data-tela="tv"] .widget-library-wrap:focus-within { opacity: 1; }
+
+.tv-relogio { display: flex; align-items: center; gap: 14px; margin-right: 12px; font-family: "Roboto", var(--font-body); color: var(--ink-muted); }
+.tv-relogio b { font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tv-data { font-size: 13px; }
+.tv-data::first-letter { text-transform: uppercase; }
+.tv-aovivo { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ex-ok); }
+.tv-aovivo i { width: 7px; height: 7px; border-radius: 50%; background: var(--ex-ok); animation: tv-pulso 2s ease-in-out infinite; }
+@keyframes tv-pulso { 50% { opacity: 0.25; } }
+
+html[data-tela="tv"] .fig-head .widget-title { font-size: 15px; }
+html[data-tela="tv"] .fig-head .fig-grip,
+html[data-tela="tv"] .fig-head .fig-btn { opacity: 0; transition: opacity 0.15s ease; }
+html[data-tela="tv"] .widget-card:hover .fig-grip,
+html[data-tela="tv"] .widget-card:hover .fig-btn { opacity: 1; }
+html[data-tela="tv"] .modo-toggle { display: none; } /* TV não alterna Totais / Lista */
+
+html[data-tela="tv"] .sit-titulo { font-size: 30px; }
+html[data-tela="tv"] .sit-frase { font-size: 14.5px; }
+html[data-tela="tv"] .sit-kpi-rotulo { font-size: 13.5px; }
+html[data-tela="tv"] .sit-kpi strong { font-size: 48px; }
+html[data-tela="tv"] .sit-kpi strong small { font-size: 17px; }
+html[data-tela="tv"] .sit-kpi-pe { font-size: 13px; }
+html[data-tela="tv"] .pri-topo b { font-size: 14.5px; }
+html[data-tela="tv"] .pri-motivo { font-size: 13px; }
+html[data-tela="tv"] .pri-ordem { font-size: 20px; }
+
+/* ---------- Tema escuro: escolha de quem usa, por tela (botão na barra de cima; cockpits.js guarda) ---------- */
+
+.tema-btn svg { width: 20px; height: 20px; }
+.tema-btn .tema-lua, html[data-tema="escuro"] .tema-btn .tema-sol { display: none; }
+html[data-tema="escuro"] .tema-btn .tema-lua { display: block; }
+
+html[data-tema="escuro"] {
   color-scheme: dark;
   --bg: #07080a;
   --surface: #111316;
@@ -173,59 +213,34 @@ html[data-tela="tv"] {
   --ex-azul: #5aa9e6;
   --ex-azul-fundo: #10202d;
 }
-html[data-tela="tv"] body { background: var(--bg); }
+html[data-tema="escuro"] body { background: var(--bg); }
 
-/* barra de cima: fina, escura, com data e hora */
-html[data-tela="tv"] .app-topbar-wrap { background: transparent; padding: 0; top: 10px; }
-html[data-tela="tv"] .app-topbar { --header-h: 52px; height: 52px; background: #111316; box-shadow: inset 0 0 0 1px #1d2126; }
-html[data-tela="tv"] .app-topbar-logo svg { filter: brightness(0) invert(1); }
-html[data-tela="tv"] .topbar-icon-btn { color: #c9d0d8; }
-html[data-tela="tv"] .topbar-icon-btn:hover,
-html[data-tela="tv"] .cockpit-sel-btn:hover { background: #1d2126; }
-html[data-tela="tv"] .cockpit-sel-btn { color: #eef1f4; }
-html[data-tela="tv"] .cockpit-canvas { top: 68px; }
-html[data-tela="tv"] .widget-library-wrap { opacity: 0; transition: opacity 0.2s ease; }
-html[data-tela="tv"] .widget-library-wrap:hover,
-html[data-tela="tv"] .widget-library-wrap:focus-within { opacity: 1; }
+html[data-tema="escuro"] .app-topbar-wrap { background: transparent; }
+html[data-tema="escuro"] .app-topbar { background: #111316; box-shadow: inset 0 0 0 1px #1d2126; }
+html[data-tema="escuro"] .app-topbar-logo svg { filter: brightness(0) invert(1); }
+html[data-tema="escuro"] .topbar-icon-btn { color: #c9d0d8; }
+html[data-tema="escuro"] .topbar-icon-btn:hover,
+html[data-tema="escuro"] .cockpit-sel-btn:hover { background: #1d2126; }
+html[data-tema="escuro"] .cockpit-sel-btn { color: #eef1f4; }
 
-.tv-relogio { display: flex; align-items: center; gap: 14px; margin-right: 12px; font-family: "Roboto", var(--font-body); color: #aab2bd; }
-.tv-relogio b { font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #f1f3f5; font-variant-numeric: tabular-nums; }
-.tv-data { font-size: 13px; }
-.tv-data::first-letter { text-transform: uppercase; }
-.tv-aovivo { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #35c27c; }
-.tv-aovivo i { width: 7px; height: 7px; border-radius: 50%; background: #35c27c; animation: tv-pulso 2s ease-in-out infinite; }
-@keyframes tv-pulso { 50% { opacity: 0.25; } }
+html[data-tema="escuro"] .widget-card { background: var(--ex-card); box-shadow: inset 0 0 0 1px #1d2126; }
+html[data-tema="escuro"] .fig-head { border-bottom-color: #23272d; }
+html[data-tema="escuro"] .fig-head .widget-title { color: #e4e8ec; }
+html[data-tema="escuro"] .fig-head .fig-grip,
+html[data-tema="escuro"] .fig-head .fig-btn { color: #76808d; }
 
-/* cards */
-html[data-tela="tv"] .widget-card { background: var(--ex-card); box-shadow: inset 0 0 0 1px #1d2126; }
-html[data-tela="tv"] .fig-head { border-bottom-color: #23272d; }
-html[data-tela="tv"] .fig-head .widget-title { color: #e4e8ec; font-size: 15px; }
-html[data-tela="tv"] .fig-head .fig-grip,
-html[data-tela="tv"] .fig-head .fig-btn { color: #76808d; opacity: 0; transition: opacity 0.15s ease; }
-html[data-tela="tv"] .widget-card:hover .fig-grip,
-html[data-tela="tv"] .widget-card:hover .fig-btn { opacity: 1; }
-
-html[data-tela="tv"] .modo-toggle { display: none; } /* TV não alterna Totais / Lista */
-
-/* widgets novos: maiores, para ler de longe */
-html[data-tela="tv"] .sit-titulo { font-size: 30px; }
-html[data-tela="tv"] .sit-frase { font-size: 14.5px; }
-html[data-tela="tv"] .sit-kpi-rotulo { font-size: 13.5px; }
-html[data-tela="tv"] .sit-kpi strong { font-size: 48px; }
-html[data-tela="tv"] .sit-kpi strong small { font-size: 17px; }
-html[data-tela="tv"] .sit-kpi-pe { font-size: 13px; }
-html[data-tela="tv"] .pri-topo b { font-size: 14.5px; }
-html[data-tela="tv"] .pri-motivo { font-size: 13px; }
-html[data-tela="tv"] .pri-ordem { font-size: 20px; }
-
-/* Widgets que vieram do Figma têm as cores claras escritas direto no CSS. Na TV o corpo deles é invertido
+/* Widgets que vieram do Figma têm as cores claras escritas direto no CSS. No tema escuro o corpo deles é invertido
    (claro vira escuro, o matiz das cores é mantido) e o contraste é reduzido para o preto ficar no tom dos cards.
    Fotos das câmeras são desinvertidas. É um atalho de protótipo: no produto, cada widget teria os seus tokens. */
-html[data-tela="tv"] .widget-card:is([data-type="alertas"], [data-type="lentidao"], [data-type="waze"], [data-type="pluviometro"], [data-type="cameras"], [data-type="notificacoes"], [data-type="dispositivos"], [data-type="regioes"], [data-type="resumo"]) .widget-body {
+html[data-tema="escuro"] .widget-card:is([data-type="alertas"], [data-type="lentidao"], [data-type="waze"], [data-type="pluviometro"], [data-type="cameras"], [data-type="dispositivos"], [data-type="regioes"], [data-type="resumo"]) .widget-body {
   filter: invert(1) hue-rotate(180deg) contrast(0.87);
   background: #fff;
 }
-html[data-tela="tv"] .widget-card[data-type="cameras"] .widget-body img { filter: invert(1) hue-rotate(180deg) contrast(1.15); }
+html[data-tema="escuro"] .widget-card[data-type="cameras"] .widget-body img { filter: invert(1) hue-rotate(180deg) contrast(1.15); }
 /* mapa: só os ladrilhos escurecem; pinos, áreas e controles ficam com a cor de sempre */
-html[data-tela="tv"] .leaflet-container { background: #0c0d0f; }
-html[data-tela="tv"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6); }
+html[data-tema="escuro"] .leaflet-container { background: #0c0d0f; }
+html[data-tema="escuro"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6); }
+/* Notificações já usa os tokens do tema (não inverte). Botões do cabeçalho e o alternador Totais / Lista têm fundo branco fixo. */
+html[data-tema="escuro"] .fig-head .fig-btn { background: transparent; }
+html[data-tema="escuro"] .fig-head .fig-btn:hover { background: #1d2126; color: #e4e8ec; }
+html[data-tema="escuro"] .modo-toggle { filter: invert(1) hue-rotate(180deg); }

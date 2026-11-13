@@ -233,3 +233,24 @@ document.addEventListener("DOMContentLoaded", () => {
   pintar();
   setInterval(pintar, 15000);
 });
+
+/* ---------- botão de tema (claro / escuro) na barra de cima, em todas as telas ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const alvo = document.querySelector(".app-topbar-actions");
+  if (!alvo) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "topbar-icon-btn tema-btn";
+  btn.innerHTML = `<svg class="tema-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+    <svg class="tema-lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>`;
+  const rotular = () => {
+    const escuro = document.documentElement.dataset.tema === "escuro";
+    btn.title = escuro ? "Mudar para o tema claro" : "Mudar para o tema escuro";
+    btn.setAttribute("aria-label", btn.title);
+    btn.setAttribute("aria-pressed", String(escuro));
+  };
+  rotular();
+  btn.addEventListener("click", () => { Cockpits.alternarTema(); rotular(); });
+  // fica logo antes do sino
+  alvo.insertBefore(btn, alvo.querySelector(".topbar-icon-btn"));
+});
