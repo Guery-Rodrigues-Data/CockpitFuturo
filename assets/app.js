@@ -771,7 +771,7 @@ function widgetMarkup(inst) {
     <div class="widget-card" data-type="${inst.type}" data-size="md" style="--accent:${cor}; --accent-tint:${cor}1a;">
       ${cabecalhoFigmaMarkup(inst, titulo, {
         config: false, // cockpit-futuro: botão de configuração removido de todos os cabeçalhos (12/11/2026)
-        extra: inst.type === "lentidao" ? lentidaoSwitchMarkup(inst) : !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao", "situacao", "prioridades"].includes(inst.type) ? modoToggleMarkup(inst) : "",
+        extra: inst.type === "lentidao" ? lentidaoSwitchMarkup(inst) : inst.type === "cameras" ? camerasSwitchMarkup(inst) : !["mapa", "resumo", "notificacoes", "cameras", "pluviometro", "waze", "lentidao", "situacao", "prioridades"].includes(inst.type) ? modoToggleMarkup(inst) : "",
       })}
       <div class="widget-body" id="widgetBody-${inst.id}"></div>
     </div>`;
@@ -819,7 +819,7 @@ function renderWidgetBody(id) {
     return;
   }
   if (inst.type === "cameras") {
-    body.innerHTML = camerasCarrosselMarkup(); // cockpit-futuro: carrossel por ocupação (widgets-futuro.js); o mosaico antigo segue no código
+    body.innerHTML = camerasCarrosselMarkup(inst); // cockpit-futuro: carrossel por ocupação (widgets-futuro.js); o mosaico antigo segue no código
     return;
     body.innerHTML = camerasMarkup(body);
     return;

@@ -51,6 +51,8 @@ da cidade nem cruzava as fontes. Entraram dois widgets e duas telas prontas.
 - **Lentidão: interruptor "Lista"** no cabeçalho do card (13/11): ligado mostra a lista do top 10 e o gráfico,
   desligado só o gráfico. Fica salvo por card (`config.lista`). Em card estreito a lista vai para baixo do gráfico
   (antes sumia). Na Visão executiva o card nasce com a lista desligada.
+- **Câmeras: mesmo interruptor "Lista"** (13/11): ligado mostra o carrossel e o ranking de ocupação, desligado só o
+  carrossel. Também salvo por card (`config.lista`).
 
 Pendências se virar história (nada disso foi definido pelo negócio, está marcado HIPÓTESE NÃO VALIDADA no código):
 cortes de cada indicador (`SIT_CORTES`), regra "a cidade vale o pior indicador", pesos da ordem de prioridade

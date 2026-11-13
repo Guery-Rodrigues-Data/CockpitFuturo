@@ -449,3 +449,6 @@ button.al-leg:hover { color: #32383f; }
 @container (min-width: 640px) {
   .car-ranking { order: -1; padding-left: 0; padding-right: 16px; border-left: 0; border-right: 1px solid #e8ebef; }
 }
+
+/* interruptor "Lista" desligado no cabeçalho do card: some o ranking e o carrossel ocupa o card todo */
+.car.sem-lista .car-ranking { display: none; }

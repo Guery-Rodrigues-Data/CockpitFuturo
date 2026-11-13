@@ -433,11 +433,20 @@ function carrosselPos(i, atual, n) {
   return Math.abs(d) <= 2 ? String(d) : "fora";
 }
 
-function camerasCarrosselMarkup() {
+// Interruptor "Lista" do cabeçalho do card (mesmo do widget Lentidão): ligado = carrossel + ranking de ocupação;
+// desligado = só o carrossel. Fica salvo na instância (config.lista); card salvo antes de o interruptor existir vale ligado.
+const camerasComLista = (inst) => !inst || inst.config.lista !== false;
+function camerasSwitchMarkup(inst) {
+  return `<button type="button" class="lt-switch" data-fut="car-lista" data-id="${inst.id}" role="switch" aria-checked="${camerasComLista(inst)}" title="Mostrar ou esconder o ranking de ocupação">
+      <span class="lt-switch-trilho"><i></i></span>Lista
+    </button>`;
+}
+
+function camerasCarrosselMarkup(inst) {
   const itens = carrosselItens();
   const n = itens.length;
   return `
-    <div class="car">
+    <div class="car${camerasComLista(inst) ? "" : " sem-lista"}">
      <div class="car-corpo">
       <div class="car-principal">
       <div class="car-sub"><span>Maior ocupação agora</span><span class="car-giro" title="Gira a cada ${CARROSSEL_GIRO_S} s; pausa com o mouse em cima">Top ${n}</span></div>
@@ -525,4 +534,12 @@ document.addEventListener("click", (ev) => {
   if (acao === "car-ant") carrosselIr(carUi.atual - 1);
   else if (acao === "car-prox") carrosselIr(carUi.atual + 1);
   else if (acao === "car-ir") carrosselIr(Number(el.dataset.i));
+  else if (acao === "car-lista") {
+    const inst = instances.find((i) => i.id === el.dataset.id);
+    if (!inst) return;
+    inst.config.lista = !camerasComLista(inst);
+    saveLayout();
+    el.setAttribute("aria-checked", String(inst.config.lista));
+    renderWidgetBody(inst.id);
+  }
 }, true);
