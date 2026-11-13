@@ -549,25 +549,20 @@ const PRESETS = [
     id: "inicial",
     soVersao: 0, // as demais versões (v1, v3)
     nome: "Tela inicial",
-    descricao: "Resumo e mapa em cima, com a lista de subáreas e corredores ao lado; embaixo, alertas agrupados (por alarme, severidade e dispositivo), a lista completa e os totais de dispositivos. É a tela do primeiro acesso.",
-    // Layout montado à mão e capturado com cockpitDump(). Só entra o que difere do defaultConfig: as listas de
-    // regiões/tipos/severidades ficam de fora de propósito (o padrão já é "todas" e acompanha regiões novas).
-    // Atenção: alertas sem `agrupar` valem "alarme" no defaultConfig, então a lista simples pede "nenhum" explícito.
+    descricao: "Coluna à esquerda com notificações, estação pluviométrica e Waze; mapa no centro com a lentidão embaixo; à direita, câmeras, totais de dispositivos e de alertas e a lista de alertas. É a tela do primeiro acesso.",
+    // Layout montado à mão e capturado com cockpitDump() em 2026-11-13 (apresentação do Cockpit futuro). Só entra o
+    // que difere do defaultConfig: as listas de regiões/tipos/severidades ficam de fora de propósito (o padrão já é
+    // "todas" e acompanha regiões novas).
     widgets: [
-      { type: "resumo", x: 0, y: 0, w: 2, h: 10 },
-      { type: "mapa", x: 2, y: 0, w: 8, h: 10 },
-      { type: "regioes", x: 10, y: 0, w: 2, h: 14, config: { modo: "lista", listaOrdem: { campo: "falhas" } } },
-      { type: "alertas", x: 0, y: 10, w: 3, h: 13, config: { modo: "lista", filtros: { agrupar: "nenhum" } } },
-      { type: "alertas", x: 3, y: 10, w: 2, h: 4, config: { modo: "lista", filtros: { agrupar: "severidade" } } },
-      { type: "alertas", x: 5, y: 10, w: 3, h: 4, config: { modo: "lista", filtros: { agrupar: "alarme" } } },
-      { type: "alertas", x: 8, y: 10, w: 2, h: 4, config: { modo: "lista", filtros: { agrupar: "dispositivo" } } },
-      { type: "dispositivos", x: 3, y: 14, w: 3, h: 3 },
-      { type: "dispositivos", x: 6, y: 14, w: 3, h: 3 },
-      { type: "dispositivos", x: 3, y: 17, w: 3, h: 3 },
-      { type: "dispositivos", x: 6, y: 17, w: 3, h: 3 },
-      { type: "dispositivos", x: 3, y: 20, w: 3, h: 3 },
-      { type: "dispositivos", x: 6, y: 20, w: 3, h: 3 },
-      { type: "dispositivos", x: 9, y: 14, w: 3, h: 9 },
+      { type: "notificacoes", x: 0, y: 0, w: 2, h: 5 },
+      { type: "pluviometro", x: 0, y: 5, w: 2, h: 5 },
+      { type: "waze", x: 0, y: 10, w: 2, h: 5 },
+      { type: "mapa", x: 2, y: 0, w: 6, h: 10, config: { filtros: { camadas: { subareas: true, corredores: true, controladores: true } } } },
+      { type: "lentidao", x: 2, y: 10, w: 6, h: 5, config: { via: "Av. Sete de Setembro" } },
+      { type: "cameras", x: 8, y: 0, w: 4, h: 6 },
+      { type: "dispositivos", x: 8, y: 6, w: 4, h: 3 },
+      { type: "alertas", x: 8, y: 9, w: 4, h: 3 },
+      { type: "alertas", x: 8, y: 12, w: 4, h: 5, config: { modo: "lista" } },
     ],
   },
   {
