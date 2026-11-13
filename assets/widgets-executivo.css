@@ -338,35 +338,34 @@ html[data-tela="tv"] .sit-kpi-rotulo svg { width: 17px; height: 17px; }
 html[data-tema="escuro"] .sit-ia-logo { color: #ff6b63; }
 @media (prefers-reduced-motion: reduce) { .sit-ia-logo { animation: none; } }
 
-/* Ícone de IA (13/11, 2º ajuste): o símbolo da logo entra girando de lado, gira, some encolhendo e explode em partículas.
-   Ciclo de 5 s em CSS (keyframes), sem JavaScript de animação. */
+/* Ícone de IA (13/11, 3º ajuste): a logo fica sempre visível. Gira de lado e, a cada volta, solta faíscas em forma de
+   estrela de 4 pontas (símbolo de IA) e um brilho suave. Ciclo de 5 s, só CSS. */
 .sit-ia-logo-wrap { position: relative; display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; perspective: 160px; }
 .sit-ia-logo { grid-area: 1 / 1; width: 18px; height: 19px; color: var(--red); transform-style: preserve-3d; animation: sit-logo-ciclo 5s ease-in-out infinite; }
 html[data-tema="escuro"] .sit-ia-logo { color: #ff6b63; }
-.sit-burst { grid-area: 1 / 1; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: var(--red); opacity: 0; animation: sit-explode 5s ease-out infinite; }
+.sit-burst { grid-area: 1 / 1; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: var(--red); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); opacity: 0; animation: sit-explode 5s ease-out infinite; }
 html[data-tema="escuro"] .sit-burst { background: #ff6b63; }
-.sit-ia-anel { grid-area: 1 / 1; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--red); opacity: 0; transform: scale(0.3); animation: sit-anel 5s ease-out infinite; }
+.sit-ia-anel { grid-area: 1 / 1; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--red); opacity: 0; transform: scale(0.6); animation: sit-anel 5s ease-out infinite; }
 @keyframes sit-logo-ciclo {
-  0%   { transform: rotateY(-100deg) scale(0.35); opacity: 0; }
-  12%  { transform: rotateY(0deg) scale(1.1); opacity: 1; }
-  20%  { transform: rotateY(0deg) scale(1); opacity: 1; }
-  58%  { transform: rotateY(360deg) scale(1); opacity: 1; }
-  66%  { transform: rotateY(360deg) scale(0.15); opacity: 0; }
-  100% { transform: rotateY(360deg) scale(0.15); opacity: 0; }
+  0%   { transform: rotateY(0deg) scale(1); }
+  58%  { transform: rotateY(360deg) scale(1); }
+  62%  { transform: rotateY(360deg) scale(1.12); }
+  70%  { transform: rotateY(360deg) scale(1); }
+  100% { transform: rotateY(360deg) scale(1); }
 }
 @keyframes sit-explode {
-  0%, 64%  { opacity: 0; transform: translate(0, 0) scale(0.4); }
-  66%      { opacity: 1; transform: translate(0, 0) scale(1); }
-  86%      { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
-  100%     { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
+  0%, 58%  { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); }
+  62%      { opacity: 1; transform: translate(0, 0) scale(0.8) rotate(0deg); }
+  84%      { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(90deg); }
+  100%     { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); }
 }
 @keyframes sit-anel {
-  0%, 64%  { opacity: 0; transform: scale(0.3); }
-  66%      { opacity: 0.9; transform: scale(0.6); }
-  90%      { opacity: 0; transform: scale(2.1); }
-  100%     { opacity: 0; transform: scale(2.1); }
+  0%, 58%  { opacity: 0; transform: scale(0.6); }
+  62%      { opacity: 0.55; transform: scale(0.9); }
+  88%      { opacity: 0; transform: scale(1.9); }
+  100%     { opacity: 0; transform: scale(0.6); }
 }
 @media (prefers-reduced-motion: reduce) {
   .sit-ia-logo, .sit-burst, .sit-ia-anel { animation: none; }
-  .sit-ia-logo { opacity: 1; transform: none; }
+  .sit-burst, .sit-ia-anel { opacity: 0; }
 }
